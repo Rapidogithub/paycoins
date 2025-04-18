@@ -1,0 +1,136 @@
+/* Base Theme CSS Variables */
+:root {
+  /* Default Theme (Light Mode) */
+  --theme-color: #10b981; /* Default: Green */
+  --theme-color-light: rgba(16, 185, 129, 0.1);
+  --theme-color-hover: #0ea975;
+  
+  /* Base Colors - Light Mode */
+  --background-color: #f8fafc;
+  --surface-color: #ffffff;
+  --surface-color-light: #f1f5f9;
+  --surface-hover: #e2e8f0;
+  --border-color: #e2e8f0;
+  
+  /* Text Colors - Light Mode */
+  --text-color: #0f172a;
+  --text-secondary: #64748b;
+  --text-muted: #94a3b8;
+  
+  /* States - Light Mode */
+  --success-color: #10b981;
+  --warning-color: #f59e0b;
+  --error-color: #ef4444;
+  --info-color: #3b82f6;
+  
+  /* Shadows - Light Mode */
+  --shadow-sm: 0 1px 2px 0 rgba(0, 0, 0, 0.05);
+  --shadow-md: 0 4px 6px -1px rgba(0, 0, 0, 0.1), 0 2px 4px -1px rgba(0, 0, 0, 0.06);
+  --shadow-lg: 0 10px 15px -3px rgba(0, 0, 0, 0.1), 0 4px 6px -2px rgba(0, 0, 0, 0.05);
+}
+
+/* Dark Mode Theme */
+:root.dark-mode {
+  /* Base Colors - Dark Mode */
+  --background-color: #0f172a;
+  --surface-color: #1e293b;
+  --surface-color-light: #334155;
+  --surface-hover: #475569;
+  --border-color: #334155;
+  
+  /* Text Colors - Dark Mode */
+  --text-color: #f8fafc;
+  --text-secondary: #cbd5e1;
+  --text-muted: #94a3b8;
+  
+  /* Shadows - Dark Mode */
+  --shadow-sm: 0 1px 2px 0 rgba(0, 0, 0, 0.2);
+  --shadow-md: 0 4px 6px -1px rgba(0, 0, 0, 0.3), 0 2px 4px -1px rgba(0, 0, 0, 0.2);
+  --shadow-lg: 0 10px 15px -3px rgba(0, 0, 0, 0.3), 0 4px 6px -2px rgba(0, 0, 0, 0.2);
+}
+
+/* Green Theme (Default) */
+:root.theme-green {
+  --theme-color: #10b981;
+  --theme-color-light: rgba(16, 185, 129, 0.1);
+  --theme-color-hover: #0ea975;
+}
+
+/* Blue Theme */
+:root.theme-blue {
+  --theme-color: #3b82f6;
+  --theme-color-light: rgba(59, 130, 246, 0.1);
+  --theme-color-hover: #2574eb;
+}
+
+/* Purple Theme */
+:root.theme-purple {
+  --theme-color: #8b5cf6;
+  --theme-color-light: rgba(139, 92, 246, 0.1);
+  --theme-color-hover: #7c4bf1;
+}
+
+/* Orange Theme */
+:root.theme-orange {
+  --theme-color: #f97316;
+  --theme-color-light: rgba(249, 115, 22, 0.1);
+  --theme-color-hover: #ea650a;
+}
+
+/* Red Theme */
+:root.theme-red {
+  --theme-color: #ef4444;
+  --theme-color-light: rgba(239, 68, 68, 0.1);
+  --theme-color-hover: #e12d2d;
+}
+
+/* Base Styles to Apply Theme */
+body {
+  background-color: var(--background-color);
+  color: var(--text-color);
+  transition: background-color 0.3s, color 0.3s;
+}
+
+/* Card, Panel and Surface Styling */
+.card, .panel, .surface {
+  background-color: var(--surface-color);
+  border-radius: 8px;
+  box-shadow: var(--shadow-sm);
+  border: 1px solid var(--border-color);
+}
+
+/* Button Styling */
+.btn-primary {
+  background-color: var(--theme-color);
+  color: white;
+}
+
+.btn-primary:hover {
+  background-color: var(--theme-color-hover);
+}
+
+.btn-secondary {
+  background-color: var(--surface-color-light);
+  color: var(--text-color);
+}
+
+.btn-secondary:hover {
+  background-color: var(--surface-hover);
+}
+
+/* Link Styling */
+a {
+  color: var(--theme-color);
+  text-decoration: none;
+}
+
+a:hover {
+  color: var(--theme-color-hover);
+  text-decoration: underline;
+}
+
+/* Transition for Theme Changes */
+*, *::before, *::after {
+  transition-property: background-color, border-color, color, fill, stroke;
+  transition-duration: 0.2s;
+} 

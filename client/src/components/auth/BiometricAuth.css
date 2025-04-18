@@ -1,0 +1,28 @@
+.biometric-auth {
+  margin: 20px 0;
+  text-align: center;
+}
+
+.biometric-auth .loading {
+  color: #666;
+  margin: 15px 0;
+}
+
+.biometric-auth .btn {
+  padding: 10px 20px;
+  margin: 10px 0;
+  font-size: 1rem;
+}
+
+.biometric-auth .btn i {
+  margin-right: 8px;
+}
+
+.biometric-auth .alert {
+  margin: 15px 0;
+  text-align: left;
+}
+
+.biometric-auth .alert i {
+  margin-right: 8px;
+} 

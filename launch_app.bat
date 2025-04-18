@@ -1,0 +1,9 @@
+@echo off
+echo Starting PAY Application...
+echo.
+
+echo Setting environment to production...
+set NODE_ENV=production
+
+echo Starting server...
+npm run server 
