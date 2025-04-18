@@ -2,6 +2,7 @@
   "name": "pay",
   "version": "1.0.0",
   "description": "PAY - Fast and secure digital payment application",
+  "homepage": "https://Rapidogithub.github.io/Paycoins",
   "main": "server.js",
   "scripts": {
     "start": "node server.js",
@@ -10,7 +11,9 @@
     "dev": "concurrently \"npm run server\" \"npm run client\"",
     "install-client": "cd client && npm install",
     "build-client": "cd client && npm run build",
-    "heroku-postbuild": "npm run install-client && npm run build-client"
+    "heroku-postbuild": "npm run install-client && npm run build-client",
+    "predeploy": "npm run build-client",
+    "deploy": "gh-pages -d client/build"
   },
   "keywords": [
     "wallet",
@@ -33,6 +36,7 @@
   },
   "devDependencies": {
     "concurrently": "^8.2.1",
+    "gh-pages": "^6.3.0",
     "nodemon": "^3.0.1"
   }
 }

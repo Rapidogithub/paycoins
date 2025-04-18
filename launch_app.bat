@@ -1,9 +1,14 @@
 @echo off
-echo Starting PAY Application...
+echo Launching PAY Application...
 echo.
 
-echo Setting environment to production...
-set NODE_ENV=production
+echo Opening the PAY application in your default browser...
+start https://Rapidogithub.github.io/Paycoins
 
-echo Starting server...
-npm run server 
+echo.
+echo The application has been launched in your browser.
+echo You can close this window or keep it open.
+echo.
+echo Note: This launches the GitHub Pages version of the app,
+echo which is always available even when your computer is offline.
+echo. 
