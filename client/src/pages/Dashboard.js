@@ -8,6 +8,16 @@ import LimitSettingsModal from '../components/wallet/LimitSettingsModal';
 import { getStoredWallet, storeWallet, getStoredTransactions, storeTransactions } from '../utils/localStorage';
 import moment from 'moment';
 
+// Helper function to format wallet address as a phone-like number
+const formatAccountID = (address) => {
+  // Extract last 10 characters or pad with zeros if needed
+  let numericPart = address.replace(/\D/g, ''); // Remove non-numeric characters
+  numericPart = numericPart.slice(-10).padStart(10, '0');
+  
+  // Format as XXX-XXX-XXXX
+  return `${numericPart.slice(0, 3)}-${numericPart.slice(3, 6)}-${numericPart.slice(6, 10)}`;
+};
+
 const Dashboard = () => {
   const navigate = useNavigate();
   const [wallet, setWallet] = useState(null);
@@ -285,9 +295,7 @@ const Dashboard = () => {
   }
 
   return (
-    <div>
-      <h1 className="text-center my-4">Dashboard</h1>
-      
+    <div className="dashboard-container">
       {/* Quick Actions Floating Menu */}
       <div className={`quick-actions ${showQuickActions ? 'active' : ''}`}>
         <button 
@@ -392,14 +400,16 @@ const Dashboard = () => {
           {wallet.payId && (
             <div className="pay-id-container">
               <h3 className="pay-id-heading">Your PAY ID: <span className="pay-id">{wallet.payId}</span></h3>
-              <p className="pay-id-info">Share this 4-digit ID to easily receive money</p>
+              <p className="pay-id-info">Share this ID to easily receive money</p>
             </div>
           )}
           
-          <div>
-            <p>Account ID:</p>
-            <div className="wallet-address">{wallet.walletAddress}</div>
+          <div className="account-id-container">
+            <p className="account-id-label">Account ID:</p>
+            <div className="wallet-address">{formatAccountID(wallet.walletAddress)}</div>
+            <p className="account-id-info">Edit in profile settings <Link to="/profile"><i className="fas fa-user-edit"></i></Link></p>
           </div>
+          
           <div className="wallet-balance">
             Balance: {wallet.balance} PAY
           </div>
@@ -424,20 +434,20 @@ const Dashboard = () => {
               className="btn btn-primary action-btn" 
               onClick={() => navigate('/send')}
             >
-              <i className="fas fa-paper-plane"></i> Send Payment
+              <i className="fas fa-paper-plane"></i> Send
             </button>
             <button 
               className="btn btn-secondary action-btn"
               onClick={() => navigate('/receive')}
             >
-              <i className="fas fa-qrcode"></i> Receive Money
+              <i className="fas fa-qrcode"></i> Receive
             </button>
             <button 
               className="btn btn-dark action-btn" 
               onClick={() => navigate('/scan')}
               disabled={isOffline}
             >
-              <i className="fas fa-camera"></i> Scan QR Code
+              <i className="fas fa-camera"></i> Scan
             </button>
           </div>
 

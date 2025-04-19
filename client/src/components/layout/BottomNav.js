@@ -6,49 +6,46 @@ const BottomNav = ({ isAuthenticated }) => {
   const location = useLocation();
   
   if (!isAuthenticated) {
-    return null; // Don't show bottom nav for unauthenticated users
+    return null; // Don't show bottom nav for non-authenticated users
   }
 
-  // Check if the current path is a main navigation path or a sub-path
-  const isHomePath = location.pathname === '/';
-  const isHistoryPath = location.pathname === '/history';
-  const isProfilePath = location.pathname === '/profile';
-  
-  // For sub-paths, highlight the parent section
-  const isSendPath = location.pathname === '/send';
-  const isReceivePath = location.pathname === '/receive';
-  
-  // Determine active classes
-  const homeActive = isHomePath || isSendPath || isReceivePath ? 'active' : '';
-  const historyActive = isHistoryPath ? 'active' : '';
-  const profileActive = isProfilePath ? 'active' : '';
-
   return (
-    <nav className="bottom-nav">
-      <Link 
-        to="/" 
-        className={`bottom-nav-item ${homeActive}`}
-      >
-        <i className="fas fa-home"></i>
-        <span>Home</span>
+    <div className="bottom-nav">
+      <Link to="/" className={`bottom-nav-item ${location.pathname === '/' ? 'active' : ''}`}>
+        <div className="bottom-nav-icon">
+          <i className="fas fa-home"></i>
+        </div>
+        <span className="bottom-nav-text">Home</span>
       </Link>
       
-      <Link 
-        to="/history" 
-        className={`bottom-nav-item ${historyActive}`}
-      >
-        <i className="fas fa-history"></i>
-        <span>History</span>
+      <Link to="/send" className={`bottom-nav-item ${location.pathname === '/send' ? 'active' : ''}`}>
+        <div className="bottom-nav-icon">
+          <i className="fas fa-paper-plane"></i>
+        </div>
+        <span className="bottom-nav-text">Send</span>
       </Link>
       
-      <Link 
-        to="/profile" 
-        className={`bottom-nav-item ${profileActive}`}
-      >
-        <i className="fas fa-user"></i>
-        <span>Profile</span>
+      <div className="bottom-nav-item bottom-nav-main">
+        <Link to="/scan" className="bottom-nav-scan-button">
+          <i className="fas fa-qrcode"></i>
+        </Link>
+        <span className="bottom-nav-text">Scan</span>
+      </div>
+      
+      <Link to="/receive" className={`bottom-nav-item ${location.pathname === '/receive' ? 'active' : ''}`}>
+        <div className="bottom-nav-icon">
+          <i className="fas fa-download"></i>
+        </div>
+        <span className="bottom-nav-text">Receive</span>
       </Link>
-    </nav>
+      
+      <Link to="/profile" className={`bottom-nav-item ${location.pathname === '/profile' ? 'active' : ''}`}>
+        <div className="bottom-nav-icon">
+          <i className="fas fa-user"></i>
+        </div>
+        <span className="bottom-nav-text">Profile</span>
+      </Link>
+    </div>
   );
 };
 

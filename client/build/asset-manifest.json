@@ -1,15 +1,15 @@
 {
   "files": {
-    "main.css": "/Paycoins/static/css/main.55070781.css",
-    "main.js": "/Paycoins/static/js/main.b9c27a25.js",
+    "main.css": "/Paycoins/static/css/main.31210e5c.css",
+    "main.js": "/Paycoins/static/js/main.f780afee.js",
     "static/js/488.2d84ac44.chunk.js": "/Paycoins/static/js/488.2d84ac44.chunk.js",
     "index.html": "/Paycoins/index.html",
-    "main.55070781.css.map": "/Paycoins/static/css/main.55070781.css.map",
-    "main.b9c27a25.js.map": "/Paycoins/static/js/main.b9c27a25.js.map",
+    "main.31210e5c.css.map": "/Paycoins/static/css/main.31210e5c.css.map",
+    "main.f780afee.js.map": "/Paycoins/static/js/main.f780afee.js.map",
     "488.2d84ac44.chunk.js.map": "/Paycoins/static/js/488.2d84ac44.chunk.js.map"
   },
   "entrypoints": [
-    "static/css/main.55070781.css",
-    "static/js/main.b9c27a25.js"
+    "static/css/main.31210e5c.css",
+    "static/js/main.f780afee.js"
   ]
 }

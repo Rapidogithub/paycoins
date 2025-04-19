@@ -1,16 +1,16 @@
+/* Modern Bottom Navigation Bar */
 .bottom-nav {
-  position: fixed;
-  bottom: 0;
-  left: 0;
-  right: 0;
   display: flex;
   justify-content: space-around;
   align-items: center;
-  height: 60px;
-  background-color: #ffffff;
-  box-shadow: 0 -2px 10px rgba(0, 0, 0, 0.1);
-  z-index: 1000;
-  border-top: 1px solid var(--border-color-light);
+  position: fixed;
+  bottom: 0;
+  left: 0;
+  width: 100%;
+  height: 65px;
+  background-color: var(--card-bg);
+  box-shadow: 0 -2px 10px rgba(0, 0, 0, 0.05);
+  z-index: var(--z-index-fixed);
   padding-bottom: env(safe-area-inset-bottom);
 }
 
@@ -19,47 +19,115 @@
   flex-direction: column;
   align-items: center;
   justify-content: center;
-  color: var(--gray-color);
+  flex: 1;
+  height: 100%;
   text-decoration: none;
-  padding: 8px 0;
-  width: 33.33%;
-  transition: all 0.2s;
+  color: var(--text-tertiary);
+  transition: color var(--transition-fast);
   position: relative;
+  overflow: hidden;
 }
 
-.bottom-nav-item i {
-  font-size: 22px;
+.bottom-nav-icon {
+  display: flex;
+  justify-content: center;
+  align-items: center;
+  font-size: 1.25rem;
+  height: 24px;
   margin-bottom: 4px;
+  transition: transform var(--transition-fast);
 }
 
-.bottom-nav-item span {
+.bottom-nav-text {
   font-size: 12px;
   font-weight: 500;
+  transition: transform var(--transition-fast), opacity var(--transition-fast);
 }
 
+/* Active state styling */
 .bottom-nav-item.active {
   color: var(--primary-color);
 }
 
-.bottom-nav-item.active::after {
-  content: '';
-  position: absolute;
-  bottom: 0;
-  width: 40%;
-  height: 3px;
-  background-color: var(--primary-color);
-  border-radius: 3px 3px 0 0;
+.bottom-nav-item.active .bottom-nav-icon {
+  transform: translateY(-2px);
 }
 
-/* Desktop - hide bottom nav */
-@media (min-width: 769px) {
+.bottom-nav-item.active .bottom-nav-text {
+  transform: translateY(-2px);
+  opacity: 1;
+}
+
+/* Ripple effect on tap */
+.bottom-nav-item::after {
+  content: "";
+  position: absolute;
+  top: 50%;
+  left: 50%;
+  width: 5px;
+  height: 5px;
+  background: rgba(var(--primary-color-rgb), 0.3);
+  opacity: 0;
+  border-radius: 100%;
+  transform: scale(1, 1) translate(-50%);
+  transform-origin: 50% 50%;
+}
+
+.bottom-nav-item:active::after {
+  animation: ripple 0.5s ease-out;
+}
+
+/* Center scan button */
+.bottom-nav-main {
+  position: relative;
+  transform: translateY(-15px);
+  flex: 0;
+  width: 60px;
+}
+
+.bottom-nav-scan-button {
+  display: flex;
+  justify-content: center;
+  align-items: center;
+  width: 50px;
+  height: 50px;
+  border-radius: 50%;
+  background: var(--primary-color);
+  color: white;
+  box-shadow: 0 4px 8px rgba(var(--primary-color-rgb), 0.4);
+  transition: transform var(--transition-fast), box-shadow var(--transition-fast);
+  margin-bottom: 5px;
+}
+
+.bottom-nav-scan-button i {
+  font-size: 1.5rem;
+}
+
+.bottom-nav-scan-button:active {
+  transform: scale(0.95);
+  box-shadow: 0 2px 4px rgba(var(--primary-color-rgb), 0.3);
+}
+
+/* Animation keyframes */
+@keyframes ripple {
+  0% {
+    opacity: 1;
+    transform: scale(0, 0);
+  }
+  20% {
+    transform: scale(25, 25);
+    opacity: 1;
+  }
+  100% {
+    opacity: 0;
+    transform: scale(40, 40);
+  }
+}
+
+/* Tablet and desktop styles (hide bottom nav) */
+@media (min-width: 1024px) {
   .bottom-nav {
     display: none;
-  }
-  
-  /* Ensure content doesn't get hidden behind bottom nav */
-  .App .container {
-    padding-bottom: 0;
   }
 }
 
@@ -101,4 +169,15 @@
 
 .dark-mode .bottom-nav-item.active {
   color: var(--primary-color);
+}
+
+/* Add more space between content and bottom nav */
+@media (max-width: 768px) {
+  body {
+    padding-bottom: 65px;
+  }
+  
+  .container {
+    margin-bottom: 1.5rem;
+  }
 } 

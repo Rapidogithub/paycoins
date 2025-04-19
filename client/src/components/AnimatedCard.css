@@ -1,0 +1,192 @@
+/* AnimatedCard.css */
+:root {
+  --card-bg-light: #ffffff;
+  --card-bg-dark: #1e1e2e;
+  --card-shadow-light: 0 2px 8px rgba(0, 0, 0, 0.1);
+  --card-shadow-light-hover: 0 6px 16px rgba(0, 0, 0, 0.15);
+  --card-shadow-dark: 0 2px 8px rgba(0, 0, 0, 0.3);
+  --card-shadow-dark-hover: 0 6px 16px rgba(0, 0, 0, 0.4);
+  --card-border-radius: 12px;
+  --card-padding: 24px;
+  --card-transition: all 0.3s ease;
+  --card-text-light: #333333;
+  --card-text-dark: #e0e0e0;
+}
+
+.card {
+  background-color: var(--card-bg-light);
+  border-radius: var(--card-border-radius);
+  padding: var(--card-padding);
+  transition: var(--card-transition);
+  color: var(--card-text-light);
+  box-sizing: border-box;
+  width: 100%;
+}
+
+.card-dark {
+  background-color: var(--card-bg-dark);
+  color: var(--card-text-dark);
+}
+
+/* Elevation Levels */
+.elevation-0 {
+  box-shadow: none;
+  border: 1px solid rgba(0, 0, 0, 0.08);
+}
+
+.elevation-1 {
+  box-shadow: var(--card-shadow-light);
+}
+
+.elevation-2 {
+  box-shadow: 0 4px 12px rgba(0, 0, 0, 0.15);
+}
+
+.elevation-3 {
+  box-shadow: 0 8px 20px rgba(0, 0, 0, 0.18);
+}
+
+.elevation-4 {
+  box-shadow: 0 12px 28px rgba(0, 0, 0, 0.22);
+}
+
+.card-dark.elevation-1 {
+  box-shadow: var(--card-shadow-dark);
+}
+
+.card-dark.elevation-2 {
+  box-shadow: 0 4px 12px rgba(0, 0, 0, 0.45);
+}
+
+.card-dark.elevation-3 {
+  box-shadow: 0 8px 20px rgba(0, 0, 0, 0.52);
+}
+
+.card-dark.elevation-4 {
+  box-shadow: 0 12px 28px rgba(0, 0, 0, 0.58);
+}
+
+/* Hover Effects */
+.card-hover:hover {
+  transform: translateY(-4px);
+}
+
+.card-hover.elevation-0:hover {
+  box-shadow: var(--card-shadow-light);
+}
+
+.card-hover.elevation-1:hover {
+  box-shadow: var(--card-shadow-light-hover);
+}
+
+.card-hover.elevation-2:hover {
+  box-shadow: 0 8px 24px rgba(0, 0, 0, 0.18);
+}
+
+.card-hover.elevation-3:hover {
+  box-shadow: 0 12px 32px rgba(0, 0, 0, 0.22);
+}
+
+.card-hover.elevation-4:hover {
+  box-shadow: 0 16px 36px rgba(0, 0, 0, 0.25);
+}
+
+.card-dark.card-hover.elevation-0:hover {
+  box-shadow: var(--card-shadow-dark);
+}
+
+.card-dark.card-hover.elevation-1:hover {
+  box-shadow: var(--card-shadow-dark-hover);
+}
+
+.card-dark.card-hover.elevation-2:hover {
+  box-shadow: 0 8px 24px rgba(0, 0, 0, 0.55);
+}
+
+.card-dark.card-hover.elevation-3:hover {
+  box-shadow: 0 12px 32px rgba(0, 0, 0, 0.62);
+}
+
+.card-dark.card-hover.elevation-4:hover {
+  box-shadow: 0 16px 36px rgba(0, 0, 0, 0.68);
+}
+
+.animated-card {
+  position: relative;
+  background-color: #ffffff;
+  border-radius: 10px;
+  overflow: hidden;
+  box-sizing: border-box;
+  padding: 16px;
+  transition: all 0.3s ease;
+}
+
+/* Elevation Levels */
+.animated-card.elevation-1 {
+  box-shadow: 0 1px 3px rgba(0, 0, 0, 0.12), 0 1px 2px rgba(0, 0, 0, 0.24);
+}
+
+.animated-card.elevation-2 {
+  box-shadow: 0 3px 6px rgba(0, 0, 0, 0.16), 0 3px 6px rgba(0, 0, 0, 0.23);
+}
+
+.animated-card.elevation-3 {
+  box-shadow: 0 10px 20px rgba(0, 0, 0, 0.19), 0 6px 6px rgba(0, 0, 0, 0.23);
+}
+
+.animated-card.elevation-4 {
+  box-shadow: 0 14px 28px rgba(0, 0, 0, 0.25), 0 10px 10px rgba(0, 0, 0, 0.22);
+}
+
+.animated-card.elevation-5 {
+  box-shadow: 0 19px 38px rgba(0, 0, 0, 0.30), 0 15px 12px rgba(0, 0, 0, 0.22);
+}
+
+/* Card Themes */
+.animated-card.theme-light {
+  background-color: #ffffff;
+  color: #333333;
+}
+
+.animated-card.theme-dark {
+  background-color: #333333;
+  color: #ffffff;
+}
+
+/* Hover Effects */
+.animated-card:hover {
+  transform: translateY(-2px);
+}
+
+.animated-card.elevation-1:hover {
+  box-shadow: 0 2px 5px rgba(0, 0, 0, 0.15), 0 2px 4px rgba(0, 0, 0, 0.27);
+}
+
+.animated-card.elevation-2:hover {
+  box-shadow: 0 4px 8px rgba(0, 0, 0, 0.19), 0 4px 8px rgba(0, 0, 0, 0.26);
+}
+
+.animated-card.elevation-3:hover {
+  box-shadow: 0 12px 23px rgba(0, 0, 0, 0.22), 0 8px 8px rgba(0, 0, 0, 0.26);
+}
+
+.animated-card.elevation-4:hover {
+  box-shadow: 0 16px 30px rgba(0, 0, 0, 0.28), 0 12px 12px rgba(0, 0, 0, 0.25);
+}
+
+.animated-card.elevation-5:hover {
+  box-shadow: 0 21px 40px rgba(0, 0, 0, 0.33), 0 17px 14px rgba(0, 0, 0, 0.25);
+}
+
+/* Responsive Adjustments */
+@media (max-width: 768px) {
+  .animated-card {
+    padding: 12px;
+  }
+}
+
+@media (max-width: 480px) {
+  .animated-card {
+    padding: 10px;
+  }
+} 
