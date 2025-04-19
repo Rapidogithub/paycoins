@@ -1,0 +1,9 @@
+{
+  "short_name": "PAY",
+  "name": "PAY - Digital Payment Application",
+  "icons": [],
+  "start_url": ".",
+  "display": "standalone",
+  "theme_color": "#28a745",
+  "background_color": "#ffffff"
+} 
