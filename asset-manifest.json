@@ -1,12 +1,12 @@
 {
   "files": {
-    "main.css": "https://rapidogithub.github.io/paycoins/static/css/main.a87997d7.css",
-    "main.js": "https://rapidogithub.github.io/paycoins/static/js/main.baed45a4.js",
-    "static/js/685.fc38634a.chunk.js": "https://rapidogithub.github.io/paycoins/static/js/685.fc38634a.chunk.js",
-    "index.html": "https://rapidogithub.github.io/paycoins/index.html"
+    "main.css": "https://pay-backend-service.onrender.com/static/css/main.a87997d7.css",
+    "main.js": "https://pay-backend-service.onrender.com/static/js/main.f8ef0a19.js",
+    "static/js/685.fc38634a.chunk.js": "https://pay-backend-service.onrender.com/static/js/685.fc38634a.chunk.js",
+    "index.html": "https://pay-backend-service.onrender.com/index.html"
   },
   "entrypoints": [
     "static/css/main.a87997d7.css",
-    "static/js/main.baed45a4.js"
+    "static/js/main.f8ef0a19.js"
   ]
 }
