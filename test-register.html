@@ -1,0 +1,247 @@
+<!DOCTYPE html>
+<html>
+<head>
+    <title>PAY - Test Registration</title>
+    <style>
+        body {
+            font-family: Arial, sans-serif;
+            max-width: 600px;
+            margin: 0 auto;
+            padding: 20px;
+        }
+        .card {
+            border: 1px solid #ccc;
+            border-radius: 8px;
+            padding: 20px;
+            margin-bottom: 20px;
+            box-shadow: 0 2px 4px rgba(0,0,0,0.1);
+        }
+        button {
+            background-color: #28a745;
+            color: white;
+            border: none;
+            padding: 10px 15px;
+            border-radius: 4px;
+            cursor: pointer;
+        }
+        input {
+            padding: 8px;
+            margin-bottom: 10px;
+            width: 100%;
+            box-sizing: border-box;
+        }
+        pre {
+            background-color: #f5f5f5;
+            padding: 10px;
+            border-radius: 4px;
+            overflow: auto;
+        }
+    </style>
+</head>
+<body>
+    <h1>PAY - Test Page</h1>
+    
+    <div class="card">
+        <h2>Register User</h2>
+        <input type="text" id="username" placeholder="Username" value="testuser">
+        <input type="password" id="password" placeholder="Password" value="password123">
+        <button onclick="registerUser()">Register</button>
+        <div id="registerResult"></div>
+    </div>
+    
+    <div class="card">
+        <h2>Login</h2>
+        <input type="text" id="loginUsername" placeholder="Username" value="testuser">
+        <input type="password" id="loginPassword" placeholder="Password" value="password123">
+        <button onclick="loginUser()">Login</button>
+        <div id="loginResult"></div>
+    </div>
+    
+    <div class="card">
+        <h2>Get User Info</h2>
+        <button onclick="getUserInfo()">Get User Info</button>
+        <div id="userInfoResult"></div>
+    </div>
+    
+    <div class="card">
+        <h2>Get Wallet</h2>
+        <button onclick="getWallet()">Get Wallet</button>
+        <div id="walletResult"></div>
+    </div>
+    
+    <script>
+        // Store token
+        let authToken = '';
+        
+        // Register a new user
+        function registerUser() {
+            const username = document.getElementById('username').value;
+            const password = document.getElementById('password').value;
+            const resultDiv = document.getElementById('registerResult');
+            
+            resultDiv.innerHTML = '<p>Registering...</p>';
+            
+            fetch('/api/users', {
+                method: 'POST',
+                headers: {
+                    'Content-Type': 'application/json'
+                },
+                body: JSON.stringify({ username, password })
+            })
+            .then(response => {
+                if (!response.ok) {
+                    throw new Error(`HTTP error! Status: ${response.status}`);
+                }
+                return response.json();
+            })
+            .then(data => {
+                authToken = data.token;
+                resultDiv.innerHTML = `
+                    <p style="color: green;">Registration successful!</p>
+                    <pre>${JSON.stringify(data, null, 2)}</pre>
+                `;
+                // Store token in localStorage for use in your app
+                localStorage.setItem('wallet_token', authToken);
+            })
+            .catch(error => {
+                resultDiv.innerHTML = `
+                    <p style="color: red;">Registration failed</p>
+                    <p>${error.message}</p>
+                `;
+            });
+        }
+        
+        // Login a user
+        function loginUser() {
+            const username = document.getElementById('loginUsername').value;
+            const password = document.getElementById('loginPassword').value;
+            const resultDiv = document.getElementById('loginResult');
+            
+            resultDiv.innerHTML = '<p>Logging in...</p>';
+            
+            fetch('/api/auth', {
+                method: 'POST',
+                headers: {
+                    'Content-Type': 'application/json'
+                },
+                body: JSON.stringify({ username, password })
+            })
+            .then(response => {
+                if (!response.ok) {
+                    throw new Error(`HTTP error! Status: ${response.status}`);
+                }
+                return response.json();
+            })
+            .then(data => {
+                authToken = data.token;
+                resultDiv.innerHTML = `
+                    <p style="color: green;">Login successful!</p>
+                    <pre>${JSON.stringify(data, null, 2)}</pre>
+                `;
+                // Store token in localStorage for use in your app
+                localStorage.setItem('wallet_token', authToken);
+            })
+            .catch(error => {
+                resultDiv.innerHTML = `
+                    <p style="color: red;">Login failed</p>
+                    <p>${error.message}</p>
+                `;
+            });
+        }
+        
+        // Get user info
+        function getUserInfo() {
+            const token = authToken || localStorage.getItem('wallet_token');
+            const resultDiv = document.getElementById('userInfoResult');
+            
+            if (!token) {
+                resultDiv.innerHTML = '<p style="color: red;">No auth token. Please login first.</p>';
+                return;
+            }
+            
+            resultDiv.innerHTML = '<p>Loading user info...</p>';
+            
+            fetch('/api/auth', {
+                method: 'GET',
+                headers: {
+                    'x-auth-token': token
+                }
+            })
+            .then(response => {
+                if (!response.ok) {
+                    throw new Error(`HTTP error! Status: ${response.status}`);
+                }
+                return response.json();
+            })
+            .then(data => {
+                resultDiv.innerHTML = `
+                    <p style="color: green;">User info loaded successfully!</p>
+                    <pre>${JSON.stringify(data, null, 2)}</pre>
+                `;
+            })
+            .catch(error => {
+                resultDiv.innerHTML = `
+                    <p style="color: red;">Failed to load user info</p>
+                    <p>${error.message}</p>
+                `;
+            });
+        }
+        
+        // Get wallet info
+        function getWallet() {
+            const token = authToken || localStorage.getItem('wallet_token');
+            const resultDiv = document.getElementById('walletResult');
+            
+            if (!token) {
+                resultDiv.innerHTML = '<p style="color: red;">No auth token. Please login first.</p>';
+                return;
+            }
+            
+            resultDiv.innerHTML = '<p>Loading wallet info...</p>';
+            
+            fetch('/api/wallets', {
+                method: 'GET',
+                headers: {
+                    'x-auth-token': token
+                }
+            })
+            .then(response => {
+                if (!response.ok) {
+                    throw new Error(`HTTP error! Status: ${response.status}`);
+                }
+                return response.json();
+            })
+            .then(data => {
+                resultDiv.innerHTML = `
+                    <p style="color: green;">Wallet loaded successfully!</p>
+                    <pre>${JSON.stringify(data, null, 2)}</pre>
+                `;
+                // Store wallet in localStorage
+                localStorage.setItem('wallet_data', JSON.stringify(data));
+            })
+            .catch(error => {
+                resultDiv.innerHTML = `
+                    <p style="color: red;">Failed to load wallet</p>
+                    <p>${error.message}</p>
+                `;
+            });
+        }
+        
+        // Check for existing token on page load
+        document.addEventListener('DOMContentLoaded', () => {
+            const storedToken = localStorage.getItem('wallet_token');
+            if (storedToken) {
+                authToken = storedToken;
+                document.body.insertAdjacentHTML('afterbegin', `
+                    <div class="card" style="background-color: #e6f7ff;">
+                        <p>Existing token found in localStorage.</p>
+                        <button onclick="localStorage.removeItem('wallet_token'); location.reload();">
+                            Clear Token & Refresh
+                        </button>
+                    </div>
+                `);
+            }
+        });
+    </script>
+</body>
+</html> 

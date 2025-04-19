@@ -1,0 +1,24 @@
+<!DOCTYPE html>
+<html>
+<head>
+    <title>Test Page</title>
+</head>
+<body>
+    <h1>Test Page Working</h1>
+    <p>If you can see this, the web server is working correctly.</p>
+    <script>
+        // Test API connection
+        fetch('/api/auth')
+            .then(response => {
+                document.write('<p>API Response Status: ' + response.status + '</p>');
+                return response.json();
+            })
+            .then(data => {
+                document.write('<p>API Response: ' + JSON.stringify(data) + '</p>');
+            })
+            .catch(error => {
+                document.write('<p>API Error: ' + error.message + '</p>');
+            });
+    </script>
+</body>
+</html> 
