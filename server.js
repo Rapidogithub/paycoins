@@ -2,12 +2,35 @@ const express = require('express');
 const cors = require('cors');
 const path = require('path');
 const jwt = require('jsonwebtoken');
-const config = require('config');
 const bcrypt = require('bcryptjs');
 const { v4: uuidv4 } = require('uuid');
 
+// Try to load config, fallback to environment variables if needed
+let jwtSecret;
+try {
+  const config = require('config');
+  jwtSecret = config.get('jwtSecret');
+  console.log('Loaded JWT secret from config');
+} catch (err) {
+  console.warn('Warning: Could not load config properly:', err.message);
+  jwtSecret = process.env.JWT_SECRET || 'mySecretToken';
+  console.log('Using JWT secret from environment variables or default');
+}
+
 // Initialize express app
 const app = express();
+
+// Enhanced CORS configuration for GitHub Pages
+app.use(cors({
+  origin: ['https://rapidogithub.github.io', 'http://localhost:3000'],
+  methods: ['GET', 'POST', 'PUT', 'DELETE', 'OPTIONS'],
+  allowedHeaders: ['Content-Type', 'x-auth-token']
+}));
+
+// Health check endpoint (no auth required)
+app.get('/api/health', (req, res) => {
+  res.json({ status: 'ok', message: 'API server is running' });
+});
 
 // In-memory storage (for development only, not for production)
 const inMemoryStore = {
@@ -19,7 +42,6 @@ const inMemoryStore = {
 
 // Initialize Middleware
 app.use(express.json({ extended: false }));
-app.use(cors());
 
 // Generate a unique 4-digit PAY ID
 const generateUniquePayId = () => {
@@ -46,7 +68,7 @@ const auth = (req, res, next) => {
 
   // Verify token
   try {
-    const decoded = jwt.verify(token, config.get('jwtSecret'));
+    const decoded = jwt.verify(token, jwtSecret);
     req.user = decoded.user;
     next();
   } catch (err) {
@@ -61,16 +83,43 @@ const auth = (req, res, next) => {
 // @access  Public
 app.post('/api/users', async (req, res) => {
   try {
+    console.log('Registration attempt with:', { username: req.body.username });
+    
+    if (!req.body.username || !req.body.password) {
+      console.log('Missing username or password in request body');
+      return res.status(400).json({ 
+        errors: [{ msg: 'Username and password are required' }] 
+      });
+    }
+    
     const { username, password } = req.body;
+
+    // Check username length
+    if (username.length < 3) {
+      console.log('Username too short');
+      return res.status(400).json({ 
+        errors: [{ msg: 'Username must be at least 3 characters long' }] 
+      });
+    }
+
+    // Check password length
+    if (password.length < 6) {
+      console.log('Password too short');
+      return res.status(400).json({ 
+        errors: [{ msg: 'Password must be at least 6 characters long' }] 
+      });
+    }
 
     // Check if user exists
     const userExists = inMemoryStore.users.find(user => user.username === username);
     if (userExists) {
+      console.log('User already exists');
       return res.status(400).json({ errors: [{ msg: 'User already exists' }] });
     }
 
     // Generate unique PAY ID
     const payId = generateUniquePayId();
+    console.log('Generated PayID:', payId);
 
     // Create user
     const salt = await bcrypt.genSalt(10);
@@ -85,6 +134,7 @@ app.post('/api/users', async (req, res) => {
     };
 
     inMemoryStore.users.push(newUser);
+    console.log('User created successfully with ID:', newUser.id);
 
     // Create wallet for user
     const walletAddress = uuidv4();
@@ -98,6 +148,7 @@ app.post('/api/users', async (req, res) => {
     };
 
     inMemoryStore.wallets.push(newWallet);
+    console.log('Wallet created successfully with ID:', newWallet.id);
 
     // Return jsonwebtoken
     const payload = {
@@ -108,16 +159,22 @@ app.post('/api/users', async (req, res) => {
 
     jwt.sign(
       payload,
-      config.get('jwtSecret'),
+      jwtSecret,
       { expiresIn: '5 days' },
       (err, token) => {
-        if (err) throw err;
+        if (err) {
+          console.error('JWT sign error:', err);
+          throw err;
+        }
+        console.log('Token generated successfully');
         res.json({ token });
       }
     );
   } catch (err) {
-    console.error(err.message);
-    res.status(500).send('Server error');
+    console.error('Registration error:', err.message);
+    res.status(500).json({ 
+      errors: [{ msg: 'Server error during registration' }] 
+    });
   }
 });
 
@@ -144,19 +201,33 @@ app.get('/api/auth', auth, (req, res) => {
 // @access  Public
 app.post('/api/auth', async (req, res) => {
   try {
+    console.log('Login attempt with:', { username: req.body.username });
+    
+    if (!req.body.username || !req.body.password) {
+      console.log('Missing username or password in login request');
+      return res.status(400).json({ 
+        errors: [{ msg: 'Username and password are required' }] 
+      });
+    }
+    
     const { username, password } = req.body;
 
     // Check if user exists
     const user = inMemoryStore.users.find(user => user.username === username);
     if (!user) {
+      console.log('User not found during login attempt');
       return res.status(400).json({ errors: [{ msg: 'Invalid Credentials' }] });
     }
 
     // Check password
+    console.log('Checking password...');
     const isMatch = await bcrypt.compare(password, user.password);
     if (!isMatch) {
+      console.log('Password does not match');
       return res.status(400).json({ errors: [{ msg: 'Invalid Credentials' }] });
     }
+
+    console.log('Login successful for user:', user.id);
 
     // Return jsonwebtoken
     const payload = {
@@ -167,16 +238,22 @@ app.post('/api/auth', async (req, res) => {
 
     jwt.sign(
       payload,
-      config.get('jwtSecret'),
+      jwtSecret,
       { expiresIn: '5 days' },
       (err, token) => {
-        if (err) throw err;
+        if (err) {
+          console.error('JWT sign error during login:', err);
+          throw err;
+        }
+        console.log('Token generated successfully for login');
         res.json({ token });
       }
     );
   } catch (err) {
-    console.error(err.message);
-    res.status(500).send('Server error');
+    console.error('Login error:', err.message);
+    res.status(500).json({ 
+      errors: [{ msg: 'Server error during login' }] 
+    });
   }
 });
 
