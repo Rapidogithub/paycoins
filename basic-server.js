@@ -1,9 +1,19 @@
 const http = require('http');
 
+// Simple logging function
+const log = (message) => {
+  console.log(`[${new Date().toISOString()}] ${message}`);
+};
+
+// Log startup information
+log('Starting basic PAY API server...');
+log(`Node.js version: ${process.version}`);
+log(`Environment: ${process.env.NODE_ENV || 'development'}`);
+
 // Create a simple HTTP server
 const server = http.createServer((req, res) => {
   // Log the request path
-  console.log(`${new Date().toISOString()} - ${req.method} ${req.url}`);
+  log(`${req.method} ${req.url}`);
   
   // Set CORS headers
   res.setHeader('Access-Control-Allow-Origin', '*');
@@ -23,7 +33,9 @@ const server = http.createServer((req, res) => {
     res.writeHead(200, { 'Content-Type': 'application/json' });
     res.end(JSON.stringify({ 
       status: 'ok', 
-      message: 'Server is running' 
+      message: 'Server is running',
+      timestamp: new Date().toISOString(),
+      railway: true
     }));
   } 
   else if (req.url === '/api/health') {
@@ -31,15 +43,18 @@ const server = http.createServer((req, res) => {
     res.writeHead(200, { 'Content-Type': 'application/json' });
     res.end(JSON.stringify({ 
       status: 'ok', 
-      timestamp: new Date().toISOString() 
+      message: 'API health check passed',
+      timestamp: new Date().toISOString(),
+      environment: process.env.NODE_ENV || 'development',
+      port: process.env.PORT || '8080 (default)'
     }));
   }
   else if (req.url === '/api/users' && req.method === 'POST') {
     // Mock user registration
     res.writeHead(200, { 'Content-Type': 'application/json' });
     res.end(JSON.stringify({ 
-      message: 'User registration successful',
-      token: 'mock-token-123456'
+      message: 'User registration mock successful',
+      token: 'mock-jwt-token-123456'
     }));
   }
   else {
@@ -47,7 +62,8 @@ const server = http.createServer((req, res) => {
     res.writeHead(404, { 'Content-Type': 'application/json' });
     res.end(JSON.stringify({ 
       status: 'error', 
-      message: 'Not found'
+      message: 'Not found',
+      path: req.url
     }));
   }
 });
@@ -57,6 +73,13 @@ const PORT = process.env.PORT || 8080;
 
 // Start the server
 server.listen(PORT, '0.0.0.0', () => {
-  console.log(`Server running on port ${PORT}`);
-  console.log(`Using environment port: ${process.env.PORT ? 'Yes' : 'No'}`);
+  log(`Server running on port ${PORT}`);
+  log(`Using PORT from environment: ${process.env.PORT ? 'Yes' : 'No'}`);
+  log(`Health check endpoint: http://localhost:${PORT}/api/health`);
+  
+  // Log environment variables
+  log('Environment variables:');
+  log(`  NODE_ENV: ${process.env.NODE_ENV || 'not set'}`);
+  log(`  PORT: ${process.env.PORT || 'not set'}`);
+  log(`  RAILWAY_ENVIRONMENT: ${process.env.RAILWAY_ENVIRONMENT || 'not set'}`);
 }); 
