@@ -2,14 +2,12 @@
   "name": "pay",
   "version": "1.0.0",
   "private": true,
-  "main": "minimal-server.js",
+  "main": "basic-server.js",
   "engines": {
     "node": "16.x"
   },
   "scripts": {
-    "start": "node minimal-server.js"
+    "start": "node basic-server.js"
   },
-  "dependencies": {
-    "express": "^4.18.2"
-  }
+  "dependencies": {}
 }

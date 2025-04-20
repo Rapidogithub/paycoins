@@ -1,9 +1,8 @@
 [build]
 builder = "NIXPACKS"
-buildCommand = "npm install --production --no-fund --no-audit"
 
 [deploy]
-startCommand = "npm start"
+startCommand = "node basic-server.js"
 healthcheckPath = "/"
 healthcheckTimeout = 300
 restartPolicyType = "ON_FAILURE"
@@ -13,7 +12,6 @@ restartPolicyMaxRetries = 3
 [deploy.variables]
 PORT = "8080"
 NODE_ENV = "production"
-NPM_CONFIG_LOGLEVEL = "error"
 
 # Resource allocation
 [resources.production]
