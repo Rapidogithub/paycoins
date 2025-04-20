@@ -2,13 +2,15 @@ import React, { useState, useEffect, useCallback } from 'react';
 import ApiErrorBanner from './ApiErrorBanner';
 
 /**
- * Component that manages API connectivity with automatic retries
+ * Component that manages API connectivity with progressive loading and offline capabilities
  * Wraps the application and handles connection attempts to the backend
  */
 const ConnectionManager = ({ children }) => {
   const [isConnecting, setIsConnecting] = useState(true);
   const [apiError, setApiError] = useState(false);
   const [retryCount, setRetryCount] = useState(0);
+  const [showFullApp, setShowFullApp] = useState(false);
+  const [connectionStatus, setConnectionStatus] = useState('connecting');
   
   // Function to check if the API is available
   const checkApiConnection = useCallback(async () => {
@@ -34,6 +36,7 @@ const ConnectionManager = ({ children }) => {
         console.log('API connection successful');
         setApiError(false);
         setIsConnecting(false);
+        setConnectionStatus('connected');
         return true;
       } else {
         console.warn('API returned error status:', response.status);
@@ -42,6 +45,7 @@ const ConnectionManager = ({ children }) => {
     } catch (err) {
       console.warn('API connectivity test failed:', err.message);
       setApiError(true);
+      setConnectionStatus('error');
       return false;
     }
   }, []);
@@ -53,6 +57,7 @@ const ConnectionManager = ({ children }) => {
       setApiError(false);
       setIsConnecting(true);
       setRetryCount(0);
+      setConnectionStatus('connecting');
     }
     
     const success = await checkApiConnection();
@@ -74,10 +79,21 @@ const ConnectionManager = ({ children }) => {
         // Max retries reached
         setIsConnecting(false);
         setApiError(true);
+        setConnectionStatus('failed');
         console.error('Max connection retries reached. Showing error banner.');
       }
     }
   }, [checkApiConnection, retryCount]);
+  
+  // Effect to show the full app after a short delay, even if still connecting
+  useEffect(() => {
+    // After 3 seconds, show the app regardless of connection status
+    const timer = setTimeout(() => {
+      setShowFullApp(true);
+    }, 3000);
+    
+    return () => clearTimeout(timer);
+  }, []);
   
   // Initial connection attempt on component mount
   useEffect(() => {
@@ -94,29 +110,57 @@ const ConnectionManager = ({ children }) => {
     return () => clearInterval(keepAlivePing);
   }, [connectWithRetry, checkApiConnection, apiError]);
 
-  // Show loading spinner while connecting
-  if (isConnecting) {
+  // Render app with warning banner if showing full app but still connecting
+  if (showFullApp) {
     return (
-      <div className="connection-manager-loading">
-        <div className="loading-container">
-          <h2>Connecting to PAY Server...</h2>
-          <p>The server may be starting up (30-60 seconds)</p>
-          <div className="loading-spinner"></div>
-          <p className="loading-message">
-            {retryCount > 0 ? `Retry attempt ${retryCount}/3...` : 'Initial connection attempt...'}
-          </p>
-        </div>
-      </div>
+      <>
+        {(isConnecting || apiError) && (
+          <div className="connection-banner">
+            <div className="connection-status">
+              {isConnecting ? (
+                <>
+                  <i className="fas fa-sync fa-spin"></i> 
+                  <span>Connecting to server in background...</span>
+                </>
+              ) : (
+                <>
+                  <i className="fas fa-exclamation-triangle"></i>
+                  <span>Server connection issues</span>
+                  <button 
+                    onClick={() => connectWithRetry(true)}
+                    className="btn-small"
+                  >
+                    Retry
+                  </button>
+                </>
+              )}
+            </div>
+          </div>
+        )}
+        {children}
+      </>
     );
   }
 
-  // Show error banner if API is not available after retries
-  if (apiError) {
-    return <ApiErrorBanner retryFunction={() => connectWithRetry(true)} />;
-  }
-
-  // Render children when connected
-  return children;
+  // Show loading spinner while initial connecting
+  return (
+    <div className="connection-manager-loading">
+      <div className="loading-container">
+        <h2>Connecting to PAY Server...</h2>
+        <p>The server may be starting up (30-60 seconds)</p>
+        <div className="loading-spinner"></div>
+        <p className="loading-message">
+          {retryCount > 0 ? `Retry attempt ${retryCount}/3...` : 'Initial connection attempt...'}
+        </p>
+        <button 
+          onClick={() => setShowFullApp(true)} 
+          className="btn btn-secondary mt-3"
+        >
+          Continue without waiting
+        </button>
+      </div>
+    </div>
+  );
 };
 
 export default ConnectionManager; 

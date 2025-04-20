@@ -12,6 +12,21 @@ log(`Node.js version: ${process.version}`);
 log(`Environment: ${process.env.NODE_ENV || 'development'}`);
 log(`PORT environment variable: ${process.env.PORT || 'not set (will use default)'}`);
 
+// Add SIGTERM handler for Railway graceful shutdown
+process.on('SIGTERM', () => {
+  log('SIGTERM received, shutting down gracefully');
+  server.close(() => {
+    log('Server closed');
+    process.exit(0);
+  });
+  
+  // Force close after 10 seconds
+  setTimeout(() => {
+    log('Forcing shutdown after timeout');
+    process.exit(1);
+  }, 10000);
+});
+
 // Enable CORS
 app.use((req, res, next) => {
   res.header('Access-Control-Allow-Origin', '*');
@@ -23,9 +38,18 @@ app.use((req, res, next) => {
   next();
 });
 
-// Root level health check endpoint
+// Performance middleware - add response times
+app.use((req, res, next) => {
+  const start = Date.now();
+  res.on('finish', () => {
+    const duration = Date.now() - start;
+    log(`${req.method} ${req.url} - ${duration}ms`);
+  });
+  next();
+});
+
+// Root level health check endpoint - respond immediately
 app.get('/', (req, res) => {
-  log('Root endpoint accessed');
   res.json({
     status: 'ok',
     message: 'Minimal PAY API server is running',
@@ -37,7 +61,6 @@ app.get('/', (req, res) => {
 
 // Health check endpoint
 app.get('/api/health', (req, res) => {
-  log('Health check endpoint accessed');
   res.json({
     status: 'ok',
     message: 'API health check passed',
@@ -60,11 +83,14 @@ app.post('/api/users', (req, res) => {
 // Use Railway's PORT environment variable or fall back to 5001
 const PORT = process.env.PORT || 5001;
 
-// Start the server
-app.listen(PORT, '0.0.0.0', () => {
+// Optimize server startup by removing the artificial delay
+const server = app.listen(PORT, '0.0.0.0', () => {
   log(`Minimal server started on port ${PORT}`);
   log(`Using PORT from environment: ${process.env.PORT ? 'Yes' : 'No'}`);
   if (process.env.PORT) {
     log(`PORT value from environment: ${process.env.PORT}`);
   }
+  
+  // Signal that the server is ready
+  log('Server is ready to accept connections');
 }); 

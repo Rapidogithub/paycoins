@@ -14,6 +14,7 @@ const Login = ({ setUser, setIsAuthenticated }) => {
   const [error, setError] = useState('');
   const [loading, setLoading] = useState(false);
   const [showLoader, setShowLoader] = useState(false);
+  const [offlineMode, setOfflineMode] = useState(false);
 
   const { username, password } = formData;
 
@@ -50,6 +51,55 @@ const Login = ({ setUser, setIsAuthenticated }) => {
     setFormData({ ...formData, [e.target.name]: e.target.value });
   };
 
+  // Check if we have offline cached users
+  const checkOfflineUserExists = (username, password) => {
+    try {
+      const cachedUsersStr = localStorage.getItem('offlineUsers');
+      if (!cachedUsersStr) return false;
+      
+      const cachedUsers = JSON.parse(cachedUsersStr);
+      const user = cachedUsers.find(u => u.username === username);
+      
+      // Very simple password check - in a real app you'd use hashing
+      if (user && user.password === password) {
+        return user;
+      }
+      return false;
+    } catch (err) {
+      console.error('Error checking offline users:', err);
+      return false;
+    }
+  };
+
+  // Store user for offline login
+  const storeOfflineUser = (username, password, userData) => {
+    try {
+      const cachedUsersStr = localStorage.getItem('offlineUsers');
+      let cachedUsers = cachedUsersStr ? JSON.parse(cachedUsersStr) : [];
+      
+      // Check if user already exists
+      const userIndex = cachedUsers.findIndex(u => u.username === username);
+      
+      const userToStore = {
+        username,
+        password, // In a real app, store a hash, not the actual password
+        userData
+      };
+      
+      if (userIndex >= 0) {
+        // Update existing user
+        cachedUsers[userIndex] = userToStore;
+      } else {
+        // Add new user
+        cachedUsers.push(userToStore);
+      }
+      
+      localStorage.setItem('offlineUsers', JSON.stringify(cachedUsers));
+    } catch (err) {
+      console.error('Error storing offline user:', err);
+    }
+  };
+
   const onSubmit = async e => {
     e.preventDefault();
     setError('');
@@ -80,6 +130,9 @@ const Login = ({ setUser, setIsAuthenticated }) => {
       const userData = userRes.data;
       console.log('User data loaded:', userData);
       
+      // Store user for offline mode
+      storeOfflineUser(username, password, userData);
+      
       // Update state
       setUser(userData);
       storeUser(userData);
@@ -91,8 +144,32 @@ const Login = ({ setUser, setIsAuthenticated }) => {
       
       // Navigation happens in the LogoLoader component
     } catch (err) {
-      setLoading(false);
       console.error('Login error:', err);
+      
+      // Try offline login if server is unavailable
+      const offlineUser = checkOfflineUserExists(username, password);
+      if (offlineUser) {
+        setOfflineMode(true);
+        console.log('Using offline login');
+        
+        // Create a mock token
+        const mockToken = `offline-token-${Date.now()}`;
+        storeToken(mockToken);
+        setAuthToken(mockToken);
+        
+        // Set user data from cache
+        setUser(offlineUser.userData);
+        storeUser(offlineUser.userData);
+        setIsAuthenticated(true);
+        
+        // Show loader with offline mode notice
+        setLoading(false);
+        setShowLoader(true);
+        return;
+      }
+      
+      // Handle regular login errors
+      setLoading(false);
       
       // More detailed error handling
       if (err.response) {
@@ -110,7 +187,7 @@ const Login = ({ setUser, setIsAuthenticated }) => {
       } else if (err.request) {
         // The request was made but no response was received
         console.error('No response received:', err.request);
-        setError('No response from server. The backend might be starting up (wait 30-60 seconds) or unavailable.');
+        setError('No response from server. The backend might be starting up or unavailable. Try again or check if you have used this device before to log in offline.');
       } else {
         // Something happened in setting up the request that triggered an Error
         console.error('Request setup error:', err.message);
@@ -121,7 +198,7 @@ const Login = ({ setUser, setIsAuthenticated }) => {
 
   // If showing loader, return only the loader component
   if (showLoader) {
-    return <LogoLoader redirectPath="/dashboard" />;
+    return <LogoLoader redirectPath="/dashboard" offlineMode={offlineMode} />;
   }
 
   return (
