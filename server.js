@@ -27,6 +27,14 @@ app.use(cors({
   allowedHeaders: ['Content-Type', 'x-auth-token']
 }));
 
+// Root level health check endpoint (no auth required)
+app.get('/', (req, res) => {
+  res.json({ 
+    status: 'ok', 
+    message: 'PAY API server is running'
+  });
+});
+
 // Health check endpoint (no auth required)
 app.get('/api/health', (req, res) => {
   // Add more information to the health check response
@@ -502,6 +510,13 @@ if (process.env.NODE_ENV === 'production') {
   });
 }
 
+// Use Railway's PORT environment variable or fall back to 5001
 const PORT = process.env.PORT || 5001;
 
-app.listen(PORT, () => console.log(`Server started on port ${PORT}`)); 
+// Log more information about the server startup
+app.listen(PORT, '0.0.0.0', () => {
+  console.log(`Server environment: ${process.env.NODE_ENV}`);
+  console.log(`Server started on port ${PORT}`);
+  console.log(`Server URL: http://localhost:${PORT}`);
+  console.log(`Health check endpoint: http://localhost:${PORT}/api/health`);
+}); 
