@@ -1,25 +1,14 @@
 {
   "name": "pay",
   "version": "1.0.0",
-  "description": "PAY - Fast and secure digital payment application",
-  "homepage": "https://rapidogithub.github.io/paycoins/",
+  "private": true,
   "main": "minimal-server.js",
   "engines": {
     "node": "16.x"
   },
   "scripts": {
-    "start": "node minimal-server.js",
-    "build": "echo 'Build step complete'",
-    "postinstall": "echo 'Installation complete'"
+    "start": "node minimal-server.js"
   },
-  "keywords": [
-    "wallet",
-    "digital",
-    "coins",
-    "qr-code"
-  ],
-  "author": "",
-  "license": "MIT",
   "dependencies": {
     "express": "^4.18.2"
   }
