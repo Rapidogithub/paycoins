@@ -5,6 +5,16 @@ const jwt = require('jsonwebtoken');
 const bcrypt = require('bcryptjs');
 const { v4: uuidv4 } = require('uuid');
 
+// Log memory usage for debugging Railway deployment issues
+const logMemoryUsage = () => {
+  const memoryUsage = process.memoryUsage();
+  console.log('Memory usage:');
+  console.log(`  RSS: ${Math.round(memoryUsage.rss / 1024 / 1024)} MB`);
+  console.log(`  Heap Total: ${Math.round(memoryUsage.heapTotal / 1024 / 1024)} MB`);
+  console.log(`  Heap Used: ${Math.round(memoryUsage.heapUsed / 1024 / 1024)} MB`);
+  console.log(`  External: ${Math.round(memoryUsage.external / 1024 / 1024)} MB`);
+};
+
 // Try to load config, fallback to environment variables if needed
 let jwtSecret;
 try {
@@ -19,6 +29,12 @@ try {
 
 // Initialize express app
 const app = express();
+
+// Log startup information
+console.log('Starting PAY API server...');
+console.log(`Node.js version: ${process.version}`);
+console.log(`Environment: ${process.env.NODE_ENV}`);
+logMemoryUsage();
 
 // Enhanced CORS configuration for GitHub Pages and Railway
 app.use(cors({
@@ -37,12 +53,16 @@ app.get('/', (req, res) => {
 
 // Health check endpoint (no auth required)
 app.get('/api/health', (req, res) => {
+  // Log memory usage on health check
+  logMemoryUsage();
+  
   // Add more information to the health check response
   res.json({ 
     status: 'ok', 
     message: 'API server is running', 
     environment: process.env.NODE_ENV,
-    timestamp: new Date().toISOString()
+    timestamp: new Date().toISOString(),
+    uptime: process.uptime() + ' seconds'
   });
 });
 
@@ -502,21 +522,77 @@ app.get('/api/users/find/:payId', auth, (req, res) => {
 
 // Serve static assets in production
 if (process.env.NODE_ENV === 'production') {
+  // Check if client/build exists
+  try {
+    if (require('fs').existsSync(path.join(__dirname, 'client', 'build'))) {
+      console.log('Found client/build directory, serving static files');
   // Set static folder
-  app.use(express.static('client/build'));
+      app.use(express.static(path.join(__dirname, 'client', 'build')));
 
   app.get('*', (req, res) => {
+        if (req.path.startsWith('/api')) {
+          // If it's an API route that wasn't caught by previous handlers
+          console.log(`API route not found: ${req.path}`);
+          return res.status(404).json({ msg: 'API endpoint not found' });
+        }
+        
+        // Serve the React app
     res.sendFile(path.resolve(__dirname, 'client', 'build', 'index.html'));
   });
+    } else {
+      console.log('No client/build directory found - API only mode');
+      
+      // Catch-all route for non-API routes when no client build exists
+      app.get('*', (req, res, next) => {
+        if (req.path.startsWith('/api')) {
+          // Let API routes continue to normal handlers
+          return next();
+        }
+        
+        // For non-API routes, just return info about the API
+        res.json({
+          name: 'PAY API',
+          version: require('./package.json').version,
+          message: 'This is an API server. There is no client build deployed here.'
+        });
+      });
+    }
+  } catch (err) {
+    console.error('Error setting up static files:', err.message);
+  }
+} else {
+  console.log('Running in development mode - API only');
 }
 
 // Use Railway's PORT environment variable or fall back to 5001
 const PORT = process.env.PORT || 5001;
 
 // Log more information about the server startup
-app.listen(PORT, '0.0.0.0', () => {
+const server = app.listen(PORT, '0.0.0.0', () => {
   console.log(`Server environment: ${process.env.NODE_ENV}`);
   console.log(`Server started on port ${PORT}`);
   console.log(`Server URL: http://localhost:${PORT}`);
   console.log(`Health check endpoint: http://localhost:${PORT}/api/health`);
+  
+  // Log memory usage on startup
+  logMemoryUsage();
+});
+
+// Graceful shutdown
+process.on('SIGTERM', () => {
+  console.log('SIGTERM signal received: closing HTTP server');
+  logMemoryUsage();
+  server.close(() => {
+    console.log('HTTP server closed');
+    process.exit(0);
+  });
+});
+
+process.on('SIGINT', () => {
+  console.log('SIGINT signal received: closing HTTP server');
+  logMemoryUsage();
+  server.close(() => {
+    console.log('HTTP server closed');
+    process.exit(0);
+  });
 }); 
