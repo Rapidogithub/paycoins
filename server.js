@@ -20,7 +20,7 @@ try {
 // Initialize express app
 const app = express();
 
-// Enhanced CORS configuration for GitHub Pages
+// Enhanced CORS configuration for GitHub Pages and Railway
 app.use(cors({
   origin: ['https://rapidogithub.github.io', 'http://localhost:3000'],
   methods: ['GET', 'POST', 'PUT', 'DELETE', 'OPTIONS'],
@@ -29,7 +29,13 @@ app.use(cors({
 
 // Health check endpoint (no auth required)
 app.get('/api/health', (req, res) => {
-  res.json({ status: 'ok', message: 'API server is running' });
+  // Add more information to the health check response
+  res.json({ 
+    status: 'ok', 
+    message: 'API server is running', 
+    environment: process.env.NODE_ENV,
+    timestamp: new Date().toISOString()
+  });
 });
 
 // In-memory storage (for development only, not for production)
