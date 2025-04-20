@@ -78,6 +78,7 @@ const PORT = process.env.PORT || 5001;
 // Start the server
 const server = app.listen(PORT, '0.0.0.0', () => {
   console.log(`Minimal server started on port ${PORT}`);
+  console.log(`Using PORT from environment: ${process.env.PORT ? 'Yes' : 'No'}`);
   console.log(`Health check endpoint: http://localhost:${PORT}/api/health`);
   logMemoryUsage();
 });
