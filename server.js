@@ -43,24 +43,32 @@ app.use(cors({
   methods: ['GET', 'POST', 'PUT', 'DELETE', 'OPTIONS']
 }));
 
-// Root level health check endpoint (no auth required)
+// Enhanced health check endpoints
 app.get('/', (req, res) => {
   res.json({ 
     status: 'ok', 
-    message: 'PAY API server is running'
+    message: 'PAY API server is running',
+    protocol: req.protocol,
+    secure: req.secure,
+    timestamp: new Date().toISOString()
   });
 });
 
-// Health check endpoint (no auth required)
 app.get('/api/health', (req, res) => {
-  // Log memory usage on health check
+  const walletCount = inMemoryStore.wallets.length;
+  const userCount = inMemoryStore.users.length;
+  
   logMemoryUsage();
-
-  // Add more information to the health check response
+  
   res.json({ 
     status: 'ok', 
-    message: 'API server is running', 
+    api: 'healthy',
+    wallets: 'active',
+    users: userCount,
+    walletCount: walletCount,
     environment: process.env.NODE_ENV,
+    protocol: req.protocol,
+    secure: req.secure,
     timestamp: new Date().toISOString(),
     uptime: process.uptime() + ' seconds'
   });
@@ -567,10 +575,11 @@ if (process.env.NODE_ENV === 'production') {
 // Use Railway's PORT environment variable or fall back to 5000
 const PORT = process.env.PORT || 5000;
 
-// Enable trust proxy for HTTPS
+// Enhanced HTTPS and proxy settings
 app.enable('trust proxy');
+app.set('trust proxy', 1);
 
-// Log more information about the server startup
+// Handle errors more gracefully
 const server = app.listen(PORT, '0.0.0.0', () => {
   console.log(`Server environment: ${process.env.NODE_ENV}`);
   console.log(`Server started on port ${PORT}`);
