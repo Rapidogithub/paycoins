@@ -43,22 +43,33 @@ app.use(cors({
   methods: ['GET', 'POST', 'PUT', 'DELETE', 'OPTIONS']
 }));
 
-// Enhanced health check endpoints
+// Quick health check endpoint
 app.get('/', (req, res) => {
   res.json({ 
-    status: 'ok', 
-    message: 'PAY API server is running',
-    protocol: req.protocol,
-    secure: req.secure,
-    timestamp: new Date().toISOString()
+    status: 'ok',
+    uptime: process.uptime()
   });
 });
 
+// Enhanced health check endpoint
 app.get('/api/health', (req, res) => {
-  const walletCount = inMemoryStore.wallets.length;
-  const userCount = inMemoryStore.users.length;
-  
-  logMemoryUsage();
+  try {
+    const walletCount = inMemoryStore?.wallets?.length || 0;
+    const userCount = inMemoryStore?.users?.length || 0;
+    
+    res.json({
+      status: 'ok',
+      ready: true,
+      uptime: process.uptime(),
+      timestamp: Date.now()
+    });
+  } catch (err) {
+    res.status(503).json({
+      status: 'error',
+      ready: false,
+      message: 'Service temporarily unavailable'
+    });
+  }
   
   res.json({ 
     status: 'ok', 
@@ -579,8 +590,9 @@ const PORT = process.env.PORT || 5000;
 app.enable('trust proxy');
 app.set('trust proxy', 1);
 
-// Handle errors more gracefully
+// Initialize server more quickly
 const server = app.listen(PORT, '0.0.0.0', () => {
+  console.log(`Server ready on port ${PORT}`);
   console.log(`Server environment: ${process.env.NODE_ENV}`);
   console.log(`Server started on port ${PORT}`);
   console.log(`Server URL: http://localhost:${PORT}`);
