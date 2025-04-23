@@ -583,14 +583,14 @@ if (process.env.NODE_ENV === 'production') {
   console.log('Running in development mode - API only');
 }
 
-// Use Railway's PORT environment variable or fall back to 5000
-const PORT = process.env.PORT || 5000;
+// Use Railway's PORT environment variable or fall back to 3000
+const PORT = process.env.PORT || 3000;
 
-// Enhanced HTTPS and proxy settings
+// Enhanced HTTPS and proxy settings for Railway
 app.enable('trust proxy');
 app.set('trust proxy', 1);
 
-// Initialize server more quickly
+// Initialize server with Railway's preferred port
 const server = app.listen(PORT, '0.0.0.0', () => {
   console.log(`Server ready on port ${PORT}`);
   console.log(`Server environment: ${process.env.NODE_ENV}`);
