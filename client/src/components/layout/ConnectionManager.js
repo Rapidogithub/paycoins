@@ -17,7 +17,7 @@ const ConnectionManager = ({ children }) => {
     try {
       const apiUrl = process.env.NODE_ENV === 'production' && process.env.REACT_APP_API_URL
         ? `${process.env.REACT_APP_API_URL}/api/health`
-        : '/api/health';
+        : `${window.location.protocol}//${window.location.hostname}:5000/api/health`;
       
       console.log('Testing API connectivity to:', apiUrl);
       

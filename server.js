@@ -564,8 +564,11 @@ if (process.env.NODE_ENV === 'production') {
   console.log('Running in development mode - API only');
 }
 
-// Use Railway's PORT environment variable or fall back to 5001
-const PORT = process.env.PORT || 5001;
+// Use Railway's PORT environment variable or fall back to 5000
+const PORT = process.env.PORT || 5000;
+
+// Enable trust proxy for HTTPS
+app.enable('trust proxy');
 
 // Log more information about the server startup
 const server = app.listen(PORT, '0.0.0.0', () => {
@@ -595,4 +598,4 @@ process.on('SIGINT', () => {
     console.log('HTTP server closed');
     process.exit(0);
   });
-}); 
+});
