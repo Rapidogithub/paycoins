@@ -38,9 +38,9 @@ logMemoryUsage();
 
 // Enhanced CORS configuration for GitHub Pages and Railway
 app.use(cors({
-  origin: ['https://rapidogithub.github.io', 'http://localhost:3000'],
-  methods: ['GET', 'POST', 'PUT', 'DELETE', 'OPTIONS'],
-  allowedHeaders: ['Content-Type', 'x-auth-token']
+  origin: ['http://localhost:3000', 'https://paycoins-production.up.railway.app'],
+  credentials: true,
+  methods: ['GET', 'POST', 'PUT', 'DELETE', 'OPTIONS']
 }));
 
 // Root level health check endpoint (no auth required)
@@ -55,7 +55,7 @@ app.get('/', (req, res) => {
 app.get('/api/health', (req, res) => {
   // Log memory usage on health check
   logMemoryUsage();
-  
+
   // Add more information to the health check response
   res.json({ 
     status: 'ok', 
@@ -84,7 +84,7 @@ const generateUniquePayId = () => {
     // Generate a random 4-digit number (1000-9999)
     payId = Math.floor(1000 + Math.random() * 9000).toString();
   } while (inMemoryStore.usedPayIds.has(payId));
-  
+
   // Add to used IDs set
   inMemoryStore.usedPayIds.add(payId);
   return payId;
@@ -118,14 +118,14 @@ const auth = (req, res, next) => {
 app.post('/api/users', async (req, res) => {
   try {
     console.log('Registration attempt with:', { username: req.body.username });
-    
+
     if (!req.body.username || !req.body.password) {
       console.log('Missing username or password in request body');
       return res.status(400).json({ 
         errors: [{ msg: 'Username and password are required' }] 
       });
     }
-    
+
     const { username, password } = req.body;
 
     // Check username length
@@ -236,14 +236,14 @@ app.get('/api/auth', auth, (req, res) => {
 app.post('/api/auth', async (req, res) => {
   try {
     console.log('Login attempt with:', { username: req.body.username });
-    
+
     if (!req.body.username || !req.body.password) {
       console.log('Missing username or password in login request');
       return res.status(400).json({ 
         errors: [{ msg: 'Username and password are required' }] 
       });
     }
-    
+
     const { username, password } = req.body;
 
     // Check if user exists
@@ -325,7 +325,7 @@ app.get('/api/wallets/generate-qr', auth, async (req, res) => {
       type: 'PAY_WALLET',
       timestamp: new Date().toISOString()
     });
-    
+
     const qrCode = await QRCode.toDataURL(qrData, {
       errorCorrectionLevel: 'H',
       margin: 1,
@@ -335,11 +335,11 @@ app.get('/api/wallets/generate-qr', auth, async (req, res) => {
         light: '#ffffff'
       }
     });
-    
+
     if (!qrCode) {
       throw new Error('Failed to generate QR code');
     }
-    
+
     res.json({ qrCode });
   } catch (err) {
     console.error('QR generation error:', err);
@@ -396,7 +396,7 @@ app.get('/api/transactions', auth, (req, res) => {
 app.post('/api/transactions', auth, async (req, res) => {
   try {
     const { receiverWalletAddress, receiverPayId, amount } = req.body;
-    
+
     // Input validation
     if ((!receiverWalletAddress && !receiverPayId) || !amount) {
       return res.status(400).json({ 
@@ -428,7 +428,7 @@ app.post('/api/transactions', auth, async (req, res) => {
 
     // Get receiver wallet
     let receiverWallet;
-    
+
     if (receiverPayId) {
       // Find by PAY ID
       receiverWallet = inMemoryStore.wallets.find(wallet => wallet.payId === receiverPayId);
@@ -493,21 +493,21 @@ app.post('/api/transactions', auth, async (req, res) => {
 app.get('/api/users/find/:payId', auth, (req, res) => {
   try {
     const payId = req.params.payId;
-    
+
     // Find user with that PAY ID
     const user = inMemoryStore.users.find(user => user.payId === payId);
-    
+
     if (!user) {
       return res.status(404).json({ msg: 'User not found' });
     }
-    
+
     // Find the wallet
     const wallet = inMemoryStore.wallets.find(wallet => wallet.user === user.id);
-    
+
     if (!wallet) {
       return res.status(404).json({ msg: 'Wallet not found for this user' });
     }
-    
+
     // Return limited information (don't expose sensitive data)
     res.json({
       username: user.username,
@@ -535,20 +535,20 @@ if (process.env.NODE_ENV === 'production') {
           console.log(`API route not found: ${req.path}`);
           return res.status(404).json({ msg: 'API endpoint not found' });
         }
-        
+
         // Serve the React app
     res.sendFile(path.resolve(__dirname, 'client', 'build', 'index.html'));
   });
     } else {
       console.log('No client/build directory found - API only mode');
-      
+
       // Catch-all route for non-API routes when no client build exists
       app.get('*', (req, res, next) => {
         if (req.path.startsWith('/api')) {
           // Let API routes continue to normal handlers
           return next();
         }
-        
+
         // For non-API routes, just return info about the API
         res.json({
           name: 'PAY API',
@@ -576,7 +576,7 @@ const server = app.listen(PORT, '0.0.0.0', () => {
   console.log(`Server started on port ${PORT}`);
   console.log(`Server URL: http://localhost:${PORT}`);
   console.log(`Health check endpoint: http://localhost:${PORT}/api/health`);
-  
+
   // Log memory usage on startup
   logMemoryUsage();
 });
