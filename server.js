@@ -38,29 +38,48 @@ logMemoryUsage();
 
 // Enhanced CORS configuration for GitHub Pages and Railway
 app.use(cors({
-  origin: ['https://rapidogithub.github.io', 'http://localhost:3000'],
-  methods: ['GET', 'POST', 'PUT', 'DELETE', 'OPTIONS'],
-  allowedHeaders: ['Content-Type', 'x-auth-token']
+  origin: ['http://localhost:3000', 'https://paycoins-production.up.railway.app'],
+  credentials: true,
+  methods: ['GET', 'POST', 'PUT', 'DELETE', 'OPTIONS']
 }));
 
-// Root level health check endpoint (no auth required)
+// Quick health check endpoint
 app.get('/', (req, res) => {
   res.json({ 
-    status: 'ok', 
-    message: 'PAY API server is running'
+    status: 'ok',
+    uptime: process.uptime()
   });
 });
 
-// Health check endpoint (no auth required)
+// Enhanced health check endpoint
 app.get('/api/health', (req, res) => {
-  // Log memory usage on health check
-  logMemoryUsage();
+  try {
+    const walletCount = inMemoryStore?.wallets?.length || 0;
+    const userCount = inMemoryStore?.users?.length || 0;
+    
+    res.json({
+      status: 'ok',
+      ready: true,
+      uptime: process.uptime(),
+      timestamp: Date.now()
+    });
+  } catch (err) {
+    res.status(503).json({
+      status: 'error',
+      ready: false,
+      message: 'Service temporarily unavailable'
+    });
+  }
   
-  // Add more information to the health check response
   res.json({ 
     status: 'ok', 
-    message: 'API server is running', 
+    api: 'healthy',
+    wallets: 'active',
+    users: userCount,
+    walletCount: walletCount,
     environment: process.env.NODE_ENV,
+    protocol: req.protocol,
+    secure: req.secure,
     timestamp: new Date().toISOString(),
     uptime: process.uptime() + ' seconds'
   });
@@ -84,7 +103,7 @@ const generateUniquePayId = () => {
     // Generate a random 4-digit number (1000-9999)
     payId = Math.floor(1000 + Math.random() * 9000).toString();
   } while (inMemoryStore.usedPayIds.has(payId));
-  
+
   // Add to used IDs set
   inMemoryStore.usedPayIds.add(payId);
   return payId;
@@ -118,14 +137,14 @@ const auth = (req, res, next) => {
 app.post('/api/users', async (req, res) => {
   try {
     console.log('Registration attempt with:', { username: req.body.username });
-    
+
     if (!req.body.username || !req.body.password) {
       console.log('Missing username or password in request body');
       return res.status(400).json({ 
         errors: [{ msg: 'Username and password are required' }] 
       });
     }
-    
+
     const { username, password } = req.body;
 
     // Check username length
@@ -236,14 +255,14 @@ app.get('/api/auth', auth, (req, res) => {
 app.post('/api/auth', async (req, res) => {
   try {
     console.log('Login attempt with:', { username: req.body.username });
-    
+
     if (!req.body.username || !req.body.password) {
       console.log('Missing username or password in login request');
       return res.status(400).json({ 
         errors: [{ msg: 'Username and password are required' }] 
       });
     }
-    
+
     const { username, password } = req.body;
 
     // Check if user exists
@@ -325,7 +344,7 @@ app.get('/api/wallets/generate-qr', auth, async (req, res) => {
       type: 'PAY_WALLET',
       timestamp: new Date().toISOString()
     });
-    
+
     const qrCode = await QRCode.toDataURL(qrData, {
       errorCorrectionLevel: 'H',
       margin: 1,
@@ -335,11 +354,11 @@ app.get('/api/wallets/generate-qr', auth, async (req, res) => {
         light: '#ffffff'
       }
     });
-    
+
     if (!qrCode) {
       throw new Error('Failed to generate QR code');
     }
-    
+
     res.json({ qrCode });
   } catch (err) {
     console.error('QR generation error:', err);
@@ -396,7 +415,7 @@ app.get('/api/transactions', auth, (req, res) => {
 app.post('/api/transactions', auth, async (req, res) => {
   try {
     const { receiverWalletAddress, receiverPayId, amount } = req.body;
-    
+
     // Input validation
     if ((!receiverWalletAddress && !receiverPayId) || !amount) {
       return res.status(400).json({ 
@@ -428,7 +447,7 @@ app.post('/api/transactions', auth, async (req, res) => {
 
     // Get receiver wallet
     let receiverWallet;
-    
+
     if (receiverPayId) {
       // Find by PAY ID
       receiverWallet = inMemoryStore.wallets.find(wallet => wallet.payId === receiverPayId);
@@ -493,21 +512,21 @@ app.post('/api/transactions', auth, async (req, res) => {
 app.get('/api/users/find/:payId', auth, (req, res) => {
   try {
     const payId = req.params.payId;
-    
+
     // Find user with that PAY ID
     const user = inMemoryStore.users.find(user => user.payId === payId);
-    
+
     if (!user) {
       return res.status(404).json({ msg: 'User not found' });
     }
-    
+
     // Find the wallet
     const wallet = inMemoryStore.wallets.find(wallet => wallet.user === user.id);
-    
+
     if (!wallet) {
       return res.status(404).json({ msg: 'Wallet not found for this user' });
     }
-    
+
     // Return limited information (don't expose sensitive data)
     res.json({
       username: user.username,
@@ -535,20 +554,20 @@ if (process.env.NODE_ENV === 'production') {
           console.log(`API route not found: ${req.path}`);
           return res.status(404).json({ msg: 'API endpoint not found' });
         }
-        
+
         // Serve the React app
     res.sendFile(path.resolve(__dirname, 'client', 'build', 'index.html'));
   });
     } else {
       console.log('No client/build directory found - API only mode');
-      
+
       // Catch-all route for non-API routes when no client build exists
       app.get('*', (req, res, next) => {
         if (req.path.startsWith('/api')) {
           // Let API routes continue to normal handlers
           return next();
         }
-        
+
         // For non-API routes, just return info about the API
         res.json({
           name: 'PAY API',
@@ -564,16 +583,21 @@ if (process.env.NODE_ENV === 'production') {
   console.log('Running in development mode - API only');
 }
 
-// Use Railway's PORT environment variable or fall back to 5001
-const PORT = process.env.PORT || 5001;
+// Use Railway's PORT environment variable or fall back to 3000
+const PORT = process.env.PORT || 3000;
 
-// Log more information about the server startup
+// Enhanced HTTPS and proxy settings for Railway
+app.enable('trust proxy');
+app.set('trust proxy', 1);
+
+// Initialize server with Railway's preferred port
 const server = app.listen(PORT, '0.0.0.0', () => {
+  console.log(`Server ready on port ${PORT}`);
   console.log(`Server environment: ${process.env.NODE_ENV}`);
   console.log(`Server started on port ${PORT}`);
   console.log(`Server URL: http://localhost:${PORT}`);
   console.log(`Health check endpoint: http://localhost:${PORT}/api/health`);
-  
+
   // Log memory usage on startup
   logMemoryUsage();
 });
@@ -595,4 +619,4 @@ process.on('SIGINT', () => {
     console.log('HTTP server closed');
     process.exit(0);
   });
-}); 
+});
