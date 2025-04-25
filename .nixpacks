@@ -1,11 +1,11 @@
 [phases.setup]
-nixPkgs = ["nodejs-16_x", "yarn", "gcc"]
+nixPkgs = ["nodejs-16_x", "yarn"]
 
 [phases.install]
 command = "npm install"
 
 [phases.build]
-command = "npm ci --production"
+command = "npm ci --only=production"
 
 [start]
-cmd = "node minimal-server.js" 
+cmd = "node railway-server.js" 
