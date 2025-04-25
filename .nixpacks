@@ -1,0 +1,11 @@
+[phases.setup]
+nixPkgs = ["nodejs-16_x", "yarn", "gcc"]
+
+[phases.install]
+command = "npm install"
+
+[phases.build]
+command = "npm ci --production"
+
+[start]
+cmd = "node minimal-server.js" 
