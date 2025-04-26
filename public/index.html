@@ -5,7 +5,105 @@
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
     <title>PAY Application</title>
     <style>
-        body {
+        body  <body>
+  <!-- Add this code right here at the beginning of body -->
+  <script>
+    (function() {
+      // Your Render backend URL - REPLACE THIS with your actual Render URL
+      const BACKEND_URL = "https://pay-app.onrender.com";
+      
+      // Create loading overlay
+      const overlay = document.createElement('div');
+      overlay.id = 'loading-overlay';
+      overlay.style.cssText = 'position:fixed;top:0;left:0;width:100%;height:100%;background:rgba(255,255,255,0.9);display:flex;flex-direction:column;justify-content:center;align-items:center;z-index:9999;';
+      
+      // Create spinner
+      const spinner = document.createElement('div');
+      spinner.style.cssText = 'width:50px;height:50px;border:5px solid #f3f3f3;border-top:5px solid #3498db;border-radius:50%;animation:spin 1s linear infinite;margin-bottom:20px;';
+      
+      // Add animation
+      const style = document.createElement('style');
+      style.textContent = '@keyframes spin{0%{transform:rotate(0deg);}100%{transform:rotate(360deg);}}';
+      document.head.appendChild(style);
+      
+      // Add message
+      const message = document.createElement('p');
+      message.textContent = 'Starting server, please wait (up to 60 seconds)...';
+      message.style.textAlign = 'center';
+      
+      // Add progress bar
+      const progressContainer = document.createElement('div');
+      progressContainer.style.cssText = 'width:80%;max-width:300px;height:10px;background:#f3f3f3;border-radius:5px;overflow:hidden;margin-top:20px;';
+      
+      const progressBar = document.createElement('div');
+      progressBar.style.cssText = 'width:0%;height:100%;background:#3498db;transition:width 0.5s;';
+      progressContainer.appendChild(progressBar);
+      
+      // Add all elements to overlay
+      overlay.appendChild(spinner);
+      overlay.appendChild(message);
+      overlay.appendChild(progressContainer);
+      document.body.appendChild(overlay);
+      
+      // Check server status
+      let attempts = 0;
+      const maxAttempts = 12;
+      
+      function checkServer() {
+        fetch(`${BACKEND_URL}/api/health`)
+          .then(response => {
+            if (response.ok) {
+              // Server is ready!
+              progressBar.style.width = '100%';
+              message.textContent = 'Server is ready! Loading application...';
+              
+              // Remove overlay after a short delay
+              setTimeout(() => {
+                document.body.removeChild(overlay);
+              }, 1000);
+            } else {
+              retry();
+            }
+          })
+          .catch(error => {
+            console.log('Server not ready yet:', error);
+            retry();
+          });
+      }
+      
+      function retry() {
+        attempts++;
+        
+        // Update progress bar
+        const progress = Math.min((attempts / maxAttempts) * 100, 95);
+        progressBar.style.width = `${progress}%`;
+        
+        if (attempts >= maxAttempts) {
+          // We've waited long enough, show retry button
+          spinner.style.display = 'none';
+          message.innerHTML = 'Server is taking longer than expected.<br>Please try again.';
+          
+          const retryButton = document.createElement('button');
+          retryButton.textContent = 'Retry Now';
+          retryButton.style.cssText = 'padding:10px 20px;background:#3498db;color:white;border:none;border-radius:4px;cursor:pointer;margin-top:20px;';
+          retryButton.onclick = function() {
+            window.location.reload();
+          };
+          
+          overlay.appendChild(retryButton);
+        } else {
+          // Try again in 5 seconds
+          message.textContent = `Starting server, please wait... (${attempts}/${maxAttempts})`;
+          setTimeout(checkServer, 5000);
+        }
+      }
+      
+      // Start checking immediately
+      checkServer();
+    })();
+  </script>
+  
+  <!-- Rest of your original HTML here -->{
             font-family: 'Segoe UI', Tahoma, Geneva, Verdana, sans-serif;
             max-width: 800px;
             margin: 0 auto;
