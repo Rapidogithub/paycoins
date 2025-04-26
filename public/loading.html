@@ -1,0 +1,184 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Starting PAY App...</title>
+    <style>
+        body {
+            font-family: 'Segoe UI', Tahoma, Geneva, Verdana, sans-serif;
+            display: flex;
+            flex-direction: column;
+            justify-content: center;
+            align-items: center;
+            min-height: 100vh;
+            margin: 0;
+            background-color: #f5f5f5;
+            color: #333;
+        }
+        .container {
+            text-align: center;
+            padding: 20px;
+            border-radius: 8px;
+            background-color: white;
+            box-shadow: 0 2px 10px rgba(0,0,0,0.1);
+            max-width: 600px;
+            width: 90%;
+        }
+        h1 {
+            color: #2c3e50;
+        }
+        .loader {
+            display: flex;
+            flex-direction: column;
+            align-items: center;
+            margin: 30px 0;
+        }
+        .spinner {
+            border: 4px solid rgba(0, 0, 0, 0.1);
+            width: 36px;
+            height: 36px;
+            border-radius: 50%;
+            border-left-color: #09f;
+            animation: spin 1s linear infinite;
+            margin-bottom: 15px;
+        }
+        .progress-bar {
+            width: 100%;
+            background-color: #e0e0e0;
+            height: 8px;
+            border-radius: 4px;
+            overflow: hidden;
+            margin-top: 15px;
+        }
+        .progress {
+            height: 100%;
+            width: 0%;
+            background-color: #09f;
+            transition: width 0.5s;
+            border-radius: 4px;
+        }
+        .status {
+            margin-top: 20px;
+            font-size: 14px;
+            color: #666;
+        }
+        .retry-btn {
+            background-color: #3498db;
+            color: white;
+            border: none;
+            padding: 10px 15px;
+            border-radius: 4px;
+            cursor: pointer;
+            font-size: 14px;
+            margin-top: 20px;
+            display: none;
+        }
+        .retry-btn:hover {
+            background-color: #2980b9;
+        }
+        .success-icon {
+            color: #2ecc71;
+            font-size: 24px;
+            display: none;
+        }
+        @keyframes spin {
+            0% { transform: rotate(0deg); }
+            100% { transform: rotate(360deg); }
+        }
+    </style>
+</head>
+<body>
+    <div class="container">
+        <h1>Starting PAY Application</h1>
+        <p>Please wait while we start the server. This may take up to 60 seconds on the first load.</p>
+        
+        <div class="loader">
+            <div class="spinner"></div>
+            <div id="progressBar" class="progress-bar">
+                <div id="progress" class="progress"></div>
+            </div>
+        </div>
+        
+        <div id="status" class="status">Checking server status...</div>
+        <div id="successIcon" class="success-icon">✓</div>
+        <button id="retryBtn" class="retry-btn">Try Again</button>
+    </div>
+
+    <script>
+        const MAX_ATTEMPTS = 12;
+        const RETRY_INTERVAL = 5000; // 5 seconds
+        let attempts = 0;
+        let interval;
+        let apiUrl = window.location.origin;
+        
+        // Start checking server status
+        checkServer();
+        
+        // Update progress bar
+        updateProgress();
+        
+        // Set up retry button
+        document.getElementById('retryBtn').addEventListener('click', function() {
+            document.getElementById('status').textContent = 'Retrying...';
+            document.getElementById('retryBtn').style.display = 'none';
+            attempts = 0;
+            updateProgress();
+            checkServer();
+        });
+        
+        function checkServer() {
+            fetch(`${apiUrl}/api/health`)
+                .then(response => {
+                    if (response.ok) {
+                        serverAwake();
+                    } else {
+                        retry();
+                    }
+                })
+                .catch(error => {
+                    console.error('Error checking server:', error);
+                    retry();
+                });
+        }
+        
+        function retry() {
+            attempts++;
+            
+            if (attempts >= MAX_ATTEMPTS) {
+                document.getElementById('status').textContent = 'Server is taking longer than expected. You can try again.';
+                document.getElementById('retryBtn').style.display = 'inline-block';
+                return;
+            }
+            
+            const percentage = Math.min(Math.floor(attempts / MAX_ATTEMPTS * 100), 95);
+            document.getElementById('progress').style.width = percentage + '%';
+            document.getElementById('status').textContent = `Waiting for server to start... (${attempts}/${MAX_ATTEMPTS})`;
+            
+            setTimeout(checkServer, RETRY_INTERVAL);
+        }
+        
+        function updateProgress() {
+            let progress = 0;
+            interval = setInterval(() => {
+                progress += 1;
+                if (progress > 95) clearInterval(interval);
+                document.getElementById('progress').style.width = `${Math.min(progress, 95)}%`;
+            }, 600);
+        }
+        
+        function serverAwake() {
+            clearInterval(interval);
+            document.getElementById('progress').style.width = '100%';
+            document.getElementById('status').textContent = 'Server is ready! Redirecting...';
+            document.getElementById('retryBtn').style.display = 'none';
+            document.getElementById('successIcon').style.display = 'block';
+            
+            // Redirect to main app after a short delay
+            setTimeout(() => {
+                window.location.href = '/';
+            }, 1500);
+        }
+    </script>
+</body>
+</html> 

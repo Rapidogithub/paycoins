@@ -11,4 +11,25 @@ services:
       - key: JWT_SECRET
         sync: false # This means it's a secret and should be manually set in Render dashboard
       - key: REACT_APP_API_URL
-        sync: false # Set this in the Render dashboard to your deployed app URL 
+        sync: false # Set this in the Render dashboard to your deployed app URL
+      - key: BACKEND_URL
+        sync: false # Optional: Set this to your API URL if frontend is hosted elsewhere
+      - key: RENDER_URL
+        fromService:
+          name: pay-app
+          type: web
+          property: url # This will automatically set to the URL of the web service
+  
+  # Keep the app alive with a background worker
+  - type: worker
+    name: pay-keep-alive
+    env: node
+    plan: free # Free tier is enough for a simple ping service
+    buildCommand: npm install
+    startCommand: npm run keep-alive
+    envVars:
+      - key: RENDER_URL
+        fromService:
+          name: pay-app
+          type: web
+          property: url 

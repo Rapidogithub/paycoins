@@ -1,0 +1,311 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Update Frontend Configuration</title>
+    <style>
+        body {
+            font-family: 'Segoe UI', Tahoma, Geneva, Verdana, sans-serif;
+            max-width: 800px;
+            margin: 0 auto;
+            padding: 20px;
+            color: #333;
+            line-height: 1.6;
+        }
+        h1 {
+            color: #2c3e50;
+            border-bottom: 1px solid #eee;
+            padding-bottom: 10px;
+        }
+        .card {
+            background-color: #fff;
+            border-radius: 8px;
+            box-shadow: 0 2px 10px rgba(0,0,0,0.1);
+            padding: 20px;
+            margin-bottom: 20px;
+        }
+        button {
+            background-color: #3498db;
+            color: white;
+            border: none;
+            padding: 10px 15px;
+            border-radius: 4px;
+            cursor: pointer;
+            font-size: 14px;
+            margin-right: 10px;
+            margin-bottom: 10px;
+        }
+        button:hover {
+            background-color: #2980b9;
+        }
+        input {
+            display: block;
+            width: 100%;
+            padding: 8px;
+            margin-bottom: 10px;
+            border: 1px solid #ddd;
+            border-radius: 4px;
+            font-family: inherit;
+        }
+        textarea {
+            display: block;
+            width: 100%;
+            padding: 8px;
+            margin-bottom: 10px;
+            border: 1px solid #ddd;
+            border-radius: 4px;
+            font-family: inherit;
+            height: 150px;
+        }
+        pre {
+            background-color: #f8f9fa;
+            border: 1px solid #ddd;
+            border-radius: 4px;
+            padding: 10px;
+            overflow: auto;
+            max-height: 300px;
+        }
+        .success {
+            color: #28a745;
+        }
+        .error {
+            color: #dc3545;
+        }
+    </style>
+</head>
+<body>
+    <h1>Update Frontend Configuration</h1>
+    
+    <div class="card">
+        <h2>Backend API URL Configuration</h2>
+        <p>Use this tool to generate code for updating your frontend to point to your Render backend API.</p>
+        
+        <div>
+            <label for="backendUrl">Your Render Backend URL:</label>
+            <input type="text" id="backendUrl" value="">
+        </div>
+        
+        <button onclick="generateCode()">Generate Frontend Code</button>
+        
+        <div id="result" style="margin-top: 20px; display: none;">
+            <h3>Add this code to your frontend:</h3>
+            <pre id="code"></pre>
+            <button onclick="copyCode()">Copy Code</button>
+            <p id="copyStatus"></p>
+        </div>
+    </div>
+    
+    <div class="card">
+        <h2>Loading Screen JavaScript</h2>
+        <p>Add this code to your GitHub Pages index.html to check if your backend is ready:</p>
+        <textarea id="loaderCode" readonly>
+// Add this at the beginning of your main JavaScript file or in a script tag in your HTML
+(function checkBackendStatus() {
+    const API_URL = "REPLACE_WITH_YOUR_RENDER_URL"; // Replace with your Render URL
+    
+    // Show a loading indicator
+    const loadingDiv = document.createElement('div');
+    loadingDiv.id = 'backend-loading';
+    loadingDiv.style.cssText = `
+        position: fixed;
+        top: 0;
+        left: 0;
+        right: 0;
+        bottom: 0;
+        background: rgba(255,255,255,0.9);
+        display: flex;
+        flex-direction: column;
+        justify-content: center;
+        align-items: center;
+        z-index: 9999;
+        font-family: sans-serif;
+    `;
+    
+    const spinner = document.createElement('div');
+    spinner.style.cssText = `
+        border: 5px solid #f3f3f3;
+        border-top: 5px solid #3498db;
+        border-radius: 50%;
+        width: 50px;
+        height: 50px;
+        animation: spin 1s linear infinite;
+        margin-bottom: 20px;
+    `;
+    
+    const spinnerKeyframes = document.createElement('style');
+    spinnerKeyframes.innerHTML = `
+        @keyframes spin {
+            0% { transform: rotate(0deg); }
+            100% { transform: rotate(360deg); }
+        }
+    `;
+    
+    const message = document.createElement('div');
+    message.textContent = 'Starting backend server, please wait (up to 60 seconds)...';
+    
+    loadingDiv.appendChild(spinner);
+    loadingDiv.appendChild(message);
+    document.head.appendChild(spinnerKeyframes);
+    document.body.appendChild(loadingDiv);
+    
+    let attempts = 0;
+    const maxAttempts = 12;
+    
+    function checkStatus() {
+        fetch(`${API_URL}/api/health`)
+            .then(response => {
+                if (response.ok) {
+                    // Backend is ready
+                    document.body.removeChild(loadingDiv);
+                } else {
+                    retryOrFail();
+                }
+            })
+            .catch(error => {
+                console.log('Backend not ready yet:', error);
+                retryOrFail();
+            });
+    }
+    
+    function retryOrFail() {
+        attempts++;
+        if (attempts >= maxAttempts) {
+            message.innerHTML = 'Backend server is taking longer than expected.<br>Please refresh the page to try again.';
+            spinner.style.display = 'none';
+            
+            const retryButton = document.createElement('button');
+            retryButton.textContent = 'Retry Now';
+            retryButton.style.cssText = `
+                margin-top: 20px;
+                padding: 10px 20px;
+                background-color: #3498db;
+                color: white;
+                border: none;
+                border-radius: 4px;
+                cursor: pointer;
+            `;
+            retryButton.onclick = function() {
+                window.location.reload();
+            };
+            
+            loadingDiv.appendChild(retryButton);
+        } else {
+            message.textContent = `Starting backend server, please wait... (${attempts}/${maxAttempts})`;
+            setTimeout(checkStatus, 5000);
+        }
+    }
+    
+    // Start checking
+    checkStatus();
+})();
+        </textarea>
+        <button onclick="copyLoaderCode()">Copy Loading Screen Code</button>
+        <p id="loaderCopyStatus"></p>
+    </div>
+
+    <script>
+        // Set default value to current origin
+        document.getElementById('backendUrl').value = window.location.origin;
+        
+        function generateCode() {
+            const backendUrl = document.getElementById('backendUrl').value.trim();
+            if (!backendUrl) {
+                alert('Please enter your Render backend URL');
+                return;
+            }
+            
+            const code = `// Configuration for the backend API
+const API_URL = "${backendUrl}";
+
+// Example of how to use this in fetch calls:
+async function fetchFromBackend(endpoint, options = {}) {
+  try {
+    const response = await fetch(\`\${API_URL}\${endpoint}\`, {
+      ...options,
+      headers: {
+        'Content-Type': 'application/json',
+        ...options.headers
+      }
+    });
+    
+    if (!response.ok) {
+      throw new Error(\`API error: \${response.status}\`);
+    }
+    
+    return await response.json();
+  } catch (error) {
+    console.error('API request failed:', error);
+    throw error;
+  }
+}
+
+// Example usage:
+// Login function
+async function login(email, password) {
+  return fetchFromBackend('/api/auth', {
+    method: 'POST',
+    body: JSON.stringify({ email, password })
+  });
+}
+
+// Register function
+async function register(email, password) {
+  return fetchFromBackend('/api/users', {
+    method: 'POST',
+    body: JSON.stringify({ email, password })
+  });
+}
+
+// Get wallet data
+async function getWallet() {
+  return fetchFromBackend('/api/wallet');
+}
+
+// Get transactions
+async function getTransactions() {
+  return fetchFromBackend('/api/transactions');
+}`;
+            
+            document.getElementById('code').textContent = code;
+            document.getElementById('result').style.display = 'block';
+            
+            // Update loader code with the correct URL
+            const loaderCode = document.getElementById('loaderCode').value;
+            document.getElementById('loaderCode').value = loaderCode.replace('REPLACE_WITH_YOUR_RENDER_URL', backendUrl);
+        }
+        
+        function copyCode() {
+            const code = document.getElementById('code').textContent;
+            navigator.clipboard.writeText(code).then(() => {
+                const status = document.getElementById('copyStatus');
+                status.textContent = 'Code copied to clipboard!';
+                status.className = 'success';
+                setTimeout(() => {
+                    status.textContent = '';
+                }, 3000);
+            }).catch(err => {
+                const status = document.getElementById('copyStatus');
+                status.textContent = 'Failed to copy code: ' + err;
+                status.className = 'error';
+            });
+        }
+        
+        function copyLoaderCode() {
+            const code = document.getElementById('loaderCode').value;
+            navigator.clipboard.writeText(code).then(() => {
+                const status = document.getElementById('loaderCopyStatus');
+                status.textContent = 'Code copied to clipboard!';
+                status.className = 'success';
+                setTimeout(() => {
+                    status.textContent = '';
+                }, 3000);
+            }).catch(err => {
+                const status = document.getElementById('loaderCopyStatus');
+                status.textContent = 'Failed to copy code: ' + err;
+                status.className = 'error';
+            });
+        }
+    </script>
+</body>
+</html> 

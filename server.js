@@ -5,20 +5,46 @@ const app = express();
 
 // Get port from environment variable (Render sets this) or default to 10000
 const PORT = process.env.PORT || 10000;
+// Get the backend URL from environment variable or use the dynamic one
+const BACKEND_URL = process.env.BACKEND_URL || null;
 
 console.log('Starting PAY server...');
 console.log(`Using PORT: ${PORT}`);
 console.log(`NODE_ENV: ${process.env.NODE_ENV}`);
+console.log(`BACKEND_URL: ${BACKEND_URL || 'dynamic (same as server URL)'}`);
+
+// Track server startup time
+const SERVER_START_TIME = Date.now();
+let SERVER_READY = false;
+
+// Mark server as ready after 3 seconds (gives time for initialization)
+setTimeout(() => {
+  SERVER_READY = true;
+  console.log(`Server marked as ready after ${(Date.now() - SERVER_START_TIME) / 1000} seconds`);
+}, 3000);
 
 // Middleware for parsing JSON
 app.use(express.json());
 
-// CORS middleware
+// Enhanced CORS middleware - allow all origins and authentication headers
 app.use((req, res, next) => {
+  // Instead of specific origins, allow any origin for testing
   res.header('Access-Control-Allow-Origin', '*');
-  res.header('Access-Control-Allow-Headers', 'Content-Type, x-auth-token');
-  res.header('Access-Control-Allow-Methods', 'GET, POST, OPTIONS');
-  if (req.method === 'OPTIONS') return res.sendStatus(200);
+  
+  // Include all necessary headers, especially authorization
+  res.header('Access-Control-Allow-Headers', 'Origin, X-Requested-With, Content-Type, Accept, Authorization, x-auth-token');
+  
+  // Allow more methods
+  res.header('Access-Control-Allow-Methods', 'GET, POST, PUT, DELETE, OPTIONS');
+  
+  // Allow credentials (important for auth)
+  res.header('Access-Control-Allow-Credentials', 'true');
+  
+  // Handle preflight requests
+  if (req.method === 'OPTIONS') {
+    return res.sendStatus(200);
+  }
+  
   console.log(`${req.method} ${req.url}`);
   next();
 });
@@ -26,6 +52,16 @@ app.use((req, res, next) => {
 // Health check endpoint required by Render
 app.get('/health', (req, res) => {
   res.status(200).send('OK');
+});
+
+// Server readiness endpoint
+app.get('/api/ready', (req, res) => {
+  const uptime = (Date.now() - SERVER_START_TIME) / 1000;
+  res.json({ 
+    ready: SERVER_READY,
+    uptime: `${uptime.toFixed(2)} seconds`,
+    message: SERVER_READY ? 'Server is ready' : 'Server is still initializing'
+  });
 });
 
 // API endpoints
@@ -37,8 +73,44 @@ app.get('/api/health', (req, res) => {
   res.json({ status: 'ok' });
 });
 
+// Enhanced user authentication endpoints
 app.post('/api/users', (req, res) => {
-  res.json({ token: 'mock-jwt-token-123456' });
+  console.log('User registration request received:', req.body);
+  // More detailed response for user registration
+  res.json({ 
+    token: 'mock-jwt-token-123456',
+    success: true,
+    message: 'User registered successfully'
+  });
+});
+
+// Add explicit login endpoint
+app.post('/api/auth', (req, res) => {
+  console.log('Login request received:', req.body);
+  // Respond with auth token
+  res.json({ 
+    token: 'mock-jwt-token-123456',
+    success: true,
+    message: 'Login successful'
+  });
+});
+
+// Add user authentication verification endpoint
+app.get('/api/auth', (req, res) => {
+  // Get token from header
+  const token = req.header('x-auth-token');
+  
+  console.log('Auth verification request received, token:', token);
+  
+  if (!token) {
+    return res.status(401).json({ message: 'No token, authorization denied' });
+  }
+  
+  // Just verify it exists for this mock version
+  res.json({ 
+    user: { id: 'user_123', name: 'Test User' },
+    success: true
+  });
 });
 
 app.get('/api/wallet', (req, res) => {
@@ -67,6 +139,16 @@ app.get('/api/transactions', (req, res) => {
   ]);
 });
 
+// Serve loading.html as the initial entry point
+app.get('/loading', (req, res) => {
+  res.sendFile(path.join(__dirname, 'public', 'loading.html'));
+});
+
+// Serve api-test.html for testing
+app.get('/api-test', (req, res) => {
+  res.sendFile(path.join(__dirname, 'public', 'api-test.html'));
+});
+
 // Serve index.html with dynamically replaced API URL
 app.get('/', (req, res) => {
   const indexPath = path.join(__dirname, 'public', 'index.html');
@@ -76,15 +158,22 @@ app.get('/', (req, res) => {
       return res.status(500).send('Error loading application');
     }
     
-    // Get the current server URL
-    const protocol = req.headers['x-forwarded-proto'] || req.protocol;
-    const host = req.headers.host;
-    const serverUrl = `${protocol}://${host}`;
+    // Get the API URL - use environment variable if set, otherwise use dynamic server URL
+    let apiUrl;
+    if (BACKEND_URL) {
+      apiUrl = BACKEND_URL;
+    } else {
+      const protocol = req.headers['x-forwarded-proto'] || req.protocol;
+      const host = req.headers.host;
+      apiUrl = `${protocol}://${host}`;
+    }
     
-    // Replace the hardcoded API_URL with the current server URL
+    console.log(`Using API URL: ${apiUrl}`);
+    
+    // Replace the hardcoded API_URL with the determined API URL
     const updatedHtml = data.replace(
       "const API_URL = 'http://localhost:5002';",
-      `const API_URL = '${serverUrl}';`
+      `const API_URL = '${apiUrl}';`
     );
     
     res.send(updatedHtml);
@@ -99,7 +188,7 @@ app.use(express.static(path.join(__dirname, 'public'), {
 // For other routes, serve the modified index.html as well for client-side routing
 app.get('*', (req, res) => {
   // Skip API routes
-  if (req.path.startsWith('/api/')) {
+  if (req.path.startsWith('/api/') || req.path === '/loading' || req.path === '/api-test') {
     return res.status(404).json({ error: 'API endpoint not found' });
   }
   
@@ -110,15 +199,20 @@ app.get('*', (req, res) => {
       return res.status(500).send('Error loading application');
     }
     
-    // Get the current server URL
-    const protocol = req.headers['x-forwarded-proto'] || req.protocol;
-    const host = req.headers.host;
-    const serverUrl = `${protocol}://${host}`;
+    // Get the API URL - use environment variable if set, otherwise use dynamic server URL
+    let apiUrl;
+    if (BACKEND_URL) {
+      apiUrl = BACKEND_URL;
+    } else {
+      const protocol = req.headers['x-forwarded-proto'] || req.protocol;
+      const host = req.headers.host;
+      apiUrl = `${protocol}://${host}`;
+    }
     
-    // Replace the hardcoded API_URL with the current server URL
+    // Replace the hardcoded API_URL with the determined API URL
     const updatedHtml = data.replace(
       "const API_URL = 'http://localhost:5002';",
-      `const API_URL = '${serverUrl}';`
+      `const API_URL = '${apiUrl}';`
     );
     
     res.send(updatedHtml);
@@ -129,4 +223,6 @@ app.get('*', (req, res) => {
 app.listen(PORT, '0.0.0.0', () => {
   console.log(`✅ Server running successfully on port ${PORT}!`);
   console.log(`📡 API URL: http://localhost:${PORT}/api`);
+  console.log(`💻 Loading Page: http://localhost:${PORT}/loading`);
+  console.log(`🧪 API Test Page: http://localhost:${PORT}/api-test`);
 }); 

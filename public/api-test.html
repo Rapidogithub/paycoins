@@ -1,0 +1,335 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>API Test Page</title>
+    <style>
+        body {
+            font-family: 'Segoe UI', Tahoma, Geneva, Verdana, sans-serif;
+            max-width: 800px;
+            margin: 0 auto;
+            padding: 20px;
+            color: #333;
+            line-height: 1.6;
+        }
+        h1 {
+            color: #2c3e50;
+            border-bottom: 1px solid #eee;
+            padding-bottom: 10px;
+        }
+        .card {
+            background-color: #fff;
+            border-radius: 8px;
+            box-shadow: 0 2px 10px rgba(0,0,0,0.1);
+            padding: 20px;
+            margin-bottom: 20px;
+        }
+        button {
+            background-color: #3498db;
+            color: white;
+            border: none;
+            padding: 10px 15px;
+            border-radius: 4px;
+            cursor: pointer;
+            font-size: 14px;
+            margin-right: 10px;
+            margin-bottom: 10px;
+        }
+        button:hover {
+            background-color: #2980b9;
+        }
+        input, textarea {
+            display: block;
+            width: 100%;
+            padding: 8px;
+            margin-bottom: 10px;
+            border: 1px solid #ddd;
+            border-radius: 4px;
+            font-family: inherit;
+        }
+        textarea {
+            height: 100px;
+        }
+        pre {
+            background-color: #f8f9fa;
+            border: 1px solid #ddd;
+            border-radius: 4px;
+            padding: 10px;
+            overflow: auto;
+            max-height: 300px;
+        }
+        .success {
+            color: #28a745;
+        }
+        .error {
+            color: #dc3545;
+        }
+    </style>
+</head>
+<body>
+    <h1>PAY API Test Page</h1>
+    
+    <div class="card">
+        <h2>API Configuration</h2>
+        <div>
+            <label for="apiUrl">API Base URL:</label>
+            <input type="text" id="apiUrl" value="">
+        </div>
+        <div>
+            <label for="token">Auth Token (if available):</label>
+            <input type="text" id="token" placeholder="Enter your auth token here">
+        </div>
+        <button onclick="saveConfig()">Save Configuration</button>
+    </div>
+    
+    <div class="card">
+        <h2>Health Check</h2>
+        <button onclick="testHealth()">Test API Health</button>
+        <pre id="healthResult"></pre>
+    </div>
+    
+    <div class="card">
+        <h2>Registration</h2>
+        <div>
+            <label for="regEmail">Email:</label>
+            <input type="email" id="regEmail" placeholder="email@example.com">
+        </div>
+        <div>
+            <label for="regPassword">Password:</label>
+            <input type="password" id="regPassword" placeholder="password">
+        </div>
+        <button onclick="testRegistration()">Test Registration</button>
+        <pre id="registrationResult"></pre>
+    </div>
+    
+    <div class="card">
+        <h2>Login</h2>
+        <div>
+            <label for="loginEmail">Email:</label>
+            <input type="email" id="loginEmail" placeholder="email@example.com">
+        </div>
+        <div>
+            <label for="loginPassword">Password:</label>
+            <input type="password" id="loginPassword" placeholder="password">
+        </div>
+        <button onclick="testLogin()">Test Login</button>
+        <pre id="loginResult"></pre>
+    </div>
+    
+    <div class="card">
+        <h2>Verify Auth</h2>
+        <button onclick="testAuth()">Test Authentication</button>
+        <pre id="authResult"></pre>
+    </div>
+    
+    <div class="card">
+        <h2>API Endpoints</h2>
+        <button onclick="testWallet()">Test Wallet API</button>
+        <button onclick="testTransactions()">Test Transactions API</button>
+        <pre id="endpointResult"></pre>
+    </div>
+    
+    <div class="card">
+        <h2>Custom Request</h2>
+        <div>
+            <label for="requestMethod">Method:</label>
+            <select id="requestMethod">
+                <option value="GET">GET</option>
+                <option value="POST">POST</option>
+                <option value="PUT">PUT</option>
+                <option value="DELETE">DELETE</option>
+            </select>
+        </div>
+        <div>
+            <label for="requestUrl">Endpoint (e.g., /api/users):</label>
+            <input type="text" id="requestUrl" placeholder="/api/endpoint">
+        </div>
+        <div>
+            <label for="requestBody">Request Body (JSON):</label>
+            <textarea id="requestBody" placeholder='{"example": "data"}'></textarea>
+        </div>
+        <button onclick="sendCustomRequest()">Send Request</button>
+        <pre id="customResult"></pre>
+    </div>
+
+    <script>
+        // Get the current URL to use as default API URL
+        const currentOrigin = window.location.origin;
+        document.getElementById('apiUrl').value = currentOrigin;
+        
+        // Save token to localStorage if available
+        const savedToken = localStorage.getItem('authToken');
+        if (savedToken) {
+            document.getElementById('token').value = savedToken;
+        }
+        
+        function saveConfig() {
+            const token = document.getElementById('token').value;
+            if (token) {
+                localStorage.setItem('authToken', token);
+                alert('Configuration saved!');
+            }
+        }
+        
+        async function makeRequest(endpoint, method = 'GET', body = null, includeToken = false) {
+            try {
+                const apiUrl = document.getElementById('apiUrl').value;
+                const token = document.getElementById('token').value;
+                
+                const url = `${apiUrl}${endpoint}`;
+                
+                const headers = {
+                    'Content-Type': 'application/json',
+                };
+                
+                if (includeToken && token) {
+                    headers['x-auth-token'] = token;
+                }
+                
+                const options = {
+                    method,
+                    headers,
+                    credentials: 'include'
+                };
+                
+                if (body) {
+                    options.body = JSON.stringify(body);
+                }
+                
+                const startTime = Date.now();
+                const response = await fetch(url, options);
+                const endTime = Date.now();
+                const timeElapsed = endTime - startTime;
+                
+                const data = await response.json();
+                
+                return {
+                    status: response.status,
+                    data,
+                    timeElapsed
+                };
+            } catch (error) {
+                return {
+                    error: error.message,
+                    timeElapsed: '?'
+                };
+            }
+        }
+        
+        async function testHealth() {
+            const result = document.getElementById('healthResult');
+            result.innerHTML = 'Testing...';
+            
+            const response = await makeRequest('/api/health');
+            result.innerHTML = formatResponse(response);
+        }
+        
+        async function testRegistration() {
+            const result = document.getElementById('registrationResult');
+            result.innerHTML = 'Testing...';
+            
+            const email = document.getElementById('regEmail').value;
+            const password = document.getElementById('regPassword').value;
+            
+            if (!email || !password) {
+                result.innerHTML = 'Please enter email and password';
+                return;
+            }
+            
+            const response = await makeRequest('/api/users', 'POST', { email, password });
+            result.innerHTML = formatResponse(response);
+            
+            // Save token if available
+            if (response.data && response.data.token) {
+                document.getElementById('token').value = response.data.token;
+                localStorage.setItem('authToken', response.data.token);
+            }
+        }
+        
+        async function testLogin() {
+            const result = document.getElementById('loginResult');
+            result.innerHTML = 'Testing...';
+            
+            const email = document.getElementById('loginEmail').value;
+            const password = document.getElementById('loginPassword').value;
+            
+            if (!email || !password) {
+                result.innerHTML = 'Please enter email and password';
+                return;
+            }
+            
+            const response = await makeRequest('/api/auth', 'POST', { email, password });
+            result.innerHTML = formatResponse(response);
+            
+            // Save token if available
+            if (response.data && response.data.token) {
+                document.getElementById('token').value = response.data.token;
+                localStorage.setItem('authToken', response.data.token);
+            }
+        }
+        
+        async function testAuth() {
+            const result = document.getElementById('authResult');
+            result.innerHTML = 'Testing...';
+            
+            const token = document.getElementById('token').value;
+            if (!token) {
+                result.innerHTML = 'No token available. Please login or register first.';
+                return;
+            }
+            
+            const response = await makeRequest('/api/auth', 'GET', null, true);
+            result.innerHTML = formatResponse(response);
+        }
+        
+        async function testWallet() {
+            const result = document.getElementById('endpointResult');
+            result.innerHTML = 'Testing wallet API...';
+            
+            const response = await makeRequest('/api/wallet', 'GET', null, true);
+            result.innerHTML = formatResponse(response);
+        }
+        
+        async function testTransactions() {
+            const result = document.getElementById('endpointResult');
+            result.innerHTML = 'Testing transactions API...';
+            
+            const response = await makeRequest('/api/transactions', 'GET', null, true);
+            result.innerHTML = formatResponse(response);
+        }
+        
+        async function sendCustomRequest() {
+            const result = document.getElementById('customResult');
+            result.innerHTML = 'Sending request...';
+            
+            const method = document.getElementById('requestMethod').value;
+            const endpoint = document.getElementById('requestUrl').value;
+            const bodyText = document.getElementById('requestBody').value;
+            
+            let body = null;
+            if (bodyText && (method === 'POST' || method === 'PUT')) {
+                try {
+                    body = JSON.parse(bodyText);
+                } catch (e) {
+                    result.innerHTML = 'Invalid JSON in request body';
+                    return;
+                }
+            }
+            
+            const response = await makeRequest(endpoint, method, body, true);
+            result.innerHTML = formatResponse(response);
+        }
+        
+        function formatResponse(response) {
+            if (response.error) {
+                return `<span class="error">Error: ${response.error}</span>\nTime: ${response.timeElapsed}ms`;
+            }
+            
+            const statusClass = response.status >= 200 && response.status < 300 ? 'success' : 'error';
+            
+            return `<span class="${statusClass}">Status: ${response.status}</span>\nTime: ${response.timeElapsed}ms\n\n${JSON.stringify(response.data, null, 2)}`;
+        }
+    </script>
+</body>
+</html> 
