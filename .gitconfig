@@ -1,0 +1,14 @@
+[core]
+    longpaths = true
+    packedGitLimit = 512m
+    packedGitWindowSize = 512m
+    autocrlf = false
+    quotepath = false
+
+[pack]
+    windowMemory = 512m
+    packSizeLimit = 512m
+    threads = 1
+
+[http]
+    postBuffer = 524288000 

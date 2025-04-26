@@ -1,0 +1,206 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>PAY Application</title>
+    <style>
+        body {
+            font-family: 'Segoe UI', Tahoma, Geneva, Verdana, sans-serif;
+            max-width: 800px;
+            margin: 0 auto;
+            padding: 20px;
+            color: #333;
+        }
+        .header {
+            display: flex;
+            align-items: center;
+            justify-content: space-between;
+            margin-bottom: 30px;
+            border-bottom: 1px solid #eee;
+            padding-bottom: 20px;
+        }
+        .logo {
+            font-size: 24px;
+            font-weight: bold;
+            color: #2c3e50;
+        }
+        .card {
+            background-color: #fff;
+            border-radius: 8px;
+            box-shadow: 0 2px 10px rgba(0,0,0,0.1);
+            padding: 20px;
+            margin-bottom: 20px;
+        }
+        .balance {
+            font-size: 32px;
+            font-weight: bold;
+            color: #2c3e50;
+        }
+        .currency {
+            font-size: 18px;
+            color: #7f8c8d;
+        }
+        .transaction {
+            display: flex;
+            justify-content: space-between;
+            padding: 12px 0;
+            border-bottom: 1px solid #eee;
+        }
+        .amount {
+            font-weight: bold;
+        }
+        .deposit {
+            color: #27ae60;
+        }
+        .payment {
+            color: #e74c3c;
+        }
+        .date {
+            color: #7f8c8d;
+            font-size: 14px;
+        }
+        button {
+            background-color: #3498db;
+            color: white;
+            border: none;
+            padding: 10px 15px;
+            border-radius: 4px;
+            cursor: pointer;
+            font-size: 14px;
+        }
+        button:hover {
+            background-color: #2980b9;
+        }
+        .status {
+            margin-top: 20px;
+            padding: 10px;
+            border-radius: 4px;
+            display: none;
+        }
+        .success {
+            background-color: #d4edda;
+            color: #155724;
+            display: block;
+        }
+        .error {
+            background-color: #f8d7da;
+            color: #721c24;
+            display: block;
+        }
+    </style>
+</head>
+<body>
+    <div class="header">
+        <div class="logo">PAY</div>
+        <button id="refreshBtn">Refresh Data</button>
+    </div>
+
+    <div id="wallet" class="card">
+        <h2>Wallet</h2>
+        <div class="balance">Loading...</div>
+        <div class="date" id="walletUpdated"></div>
+    </div>
+
+    <div class="card">
+        <h2>Recent Transactions</h2>
+        <div id="transactions">
+            <p>Loading transactions...</p>
+        </div>
+    </div>
+
+    <div id="status" class="status"></div>
+
+    <script>
+        // API base URL - change this if your server runs on a different port
+        const API_URL = 'http://localhost:5002';
+
+        // Function to show status messages
+        function showStatus(message, isError = false) {
+            const statusEl = document.getElementById('status');
+            statusEl.textContent = message;
+            statusEl.className = 'status ' + (isError ? 'error' : 'success');
+            setTimeout(() => {
+                statusEl.className = 'status';
+            }, 3000);
+        }
+
+        // Function to format date
+        function formatDate(dateString) {
+            const options = { year: 'numeric', month: 'short', day: 'numeric', hour: '2-digit', minute: '2-digit' };
+            return new Date(dateString).toLocaleDateString(undefined, options);
+        }
+
+        // Function to load wallet data
+        async function loadWallet() {
+            try {
+                const response = await fetch(`${API_URL}/api/wallet`);
+                if (!response.ok) throw new Error('Failed to load wallet data');
+                
+                const data = await response.json();
+                
+                const balanceEl = document.querySelector('.balance');
+                balanceEl.innerHTML = `${data.balance} <span class="currency">${data.currency}</span>`;
+                
+                document.getElementById('walletUpdated').textContent = `Last updated: ${formatDate(data.lastUpdated)}`;
+                
+            } catch (error) {
+                console.error('Error loading wallet:', error);
+                showStatus('Error loading wallet data. Is the server running?', true);
+            }
+        }
+
+        // Function to load transactions
+        async function loadTransactions() {
+            try {
+                const response = await fetch(`${API_URL}/api/transactions`);
+                if (!response.ok) throw new Error('Failed to load transactions');
+                
+                const transactions = await response.json();
+                
+                const transactionsEl = document.getElementById('transactions');
+                
+                if (transactions.length === 0) {
+                    transactionsEl.innerHTML = '<p>No transactions found.</p>';
+                    return;
+                }
+                
+                let html = '';
+                transactions.forEach(tx => {
+                    const amountClass = tx.type === 'deposit' ? 'deposit' : 'payment';
+                    const sign = tx.type === 'deposit' ? '+' : '-';
+                    
+                    html += `
+                        <div class="transaction">
+                            <div>
+                                <div>${tx.type.charAt(0).toUpperCase() + tx.type.slice(1)}</div>
+                                <div class="date">${formatDate(tx.date)}</div>
+                            </div>
+                            <div class="amount ${amountClass}">${sign}${tx.amount}</div>
+                        </div>
+                    `;
+                });
+                
+                transactionsEl.innerHTML = html;
+                
+            } catch (error) {
+                console.error('Error loading transactions:', error);
+                showStatus('Error loading transaction data', true);
+            }
+        }
+
+        // Load data when page loads
+        window.addEventListener('load', () => {
+            loadWallet();
+            loadTransactions();
+        });
+
+        // Refresh button
+        document.getElementById('refreshBtn').addEventListener('click', () => {
+            loadWallet();
+            loadTransactions();
+            showStatus('Data refreshed!');
+        });
+    </script>
+</body>
+</html> 

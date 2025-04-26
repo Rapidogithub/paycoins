@@ -3,6 +3,30 @@ import ReactDOM from 'react-dom/client';
 import './index.css';
 import App from './App';
 import reportWebVitals from './reportWebVitals';
+import './setupSourceMapIgnore'; // Import source map ignoring setup
+import './utils/axiosConfig'; // Import axios configuration
+
+// Set a loading state in sessionStorage
+// This helps track if the app is being freshly loaded or navigated within
+window.onload = function() {
+  // If this is a fresh page load, clear any existing auth session storage
+  // and make sure we go through the welcome flow
+  if (!sessionStorage.getItem('app_initialized')) {
+    sessionStorage.setItem('app_initialized', 'true');
+    const pathname = window.location.pathname;
+    // If user is directly accessing a specific route, store it for post-welcome redirect
+    if (pathname !== '/' && pathname !== '/paycoins/' && pathname !== '/paycoins') {
+      sessionStorage.setItem('redirect_after_welcome', pathname);
+    }
+    // Force navigation to root to see welcome screen
+    if (window.location.pathname !== '/' && 
+        window.location.pathname !== '/paycoins/' && 
+        window.location.pathname !== '/paycoins') {
+      const basePath = window.location.pathname.includes('/paycoins') ? '/paycoins/' : '/';
+      window.history.replaceState(null, null, basePath);
+    }
+  }
+};
 
 // Add error handling to catch React render errors
 try {

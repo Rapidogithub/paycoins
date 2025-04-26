@@ -1,0 +1,14 @@
+services:
+  - type: web
+    name: pay-app
+    env: node
+    plan: free
+    buildCommand: npm install
+    startCommand: npm start
+    envVars:
+      - key: NODE_ENV
+        value: production
+      - key: JWT_SECRET
+        sync: false # This means it's a secret and should be manually set in Render dashboard
+      - key: REACT_APP_API_URL
+        sync: false # Set this in the Render dashboard to your deployed app URL 

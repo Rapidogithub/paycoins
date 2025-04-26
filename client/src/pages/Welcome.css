@@ -1,0 +1,136 @@
+/* Welcome Page Styles */
+.welcome-container {
+  display: flex;
+  flex-direction: column;
+  justify-content: center;
+  align-items: center;
+  height: 100vh;
+  padding: 0 20px;
+  text-align: center;
+  background-color: var(--background-color, #f8fafc);
+}
+
+.logo-container {
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  max-width: 500px;
+  padding: 30px;
+}
+
+.logo-circle {
+  display: flex;
+  justify-content: center;
+  align-items: center;
+  width: 100px;
+  height: 100px;
+  margin-bottom: 20px;
+  border-radius: 50%;
+  background-color: var(--theme-color, #28a745);
+  box-shadow: 0 10px 25px rgba(40, 167, 69, 0.3);
+  color: white;
+}
+
+.logo-circle i {
+  font-size: 48px;
+}
+
+.logo-text {
+  font-size: 3.5rem;
+  font-weight: 700;
+  color: var(--text-color, #212529);
+  margin-bottom: 0.5rem;
+  letter-spacing: 1px;
+}
+
+.logo-tagline {
+  font-size: 1.5rem;
+  font-weight: 400;
+  color: var(--text-secondary, #6c757d);
+  margin-bottom: 2rem;
+}
+
+.get-started {
+  background-color: var(--theme-color, #28a745);
+  color: white;
+  padding: 12px 24px;
+  border-radius: 30px;
+  font-size: 1.1rem;
+  font-weight: 600;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  transition: all 0.3s ease;
+  box-shadow: 0 4px 12px rgba(40, 167, 69, 0.3);
+  border: none;
+}
+
+.get-started i {
+  margin-left: 8px;
+}
+
+.get-started:hover {
+  transform: translateY(-2px);
+  box-shadow: 0 6px 15px rgba(40, 167, 69, 0.4);
+  background-color: var(--theme-color-hover, #218838);
+}
+
+/* Dark mode styles */
+:root.dark-mode .welcome-container,
+.dark-mode .welcome-container {
+  background-color: var(--background-color, #121212);
+}
+
+:root.dark-mode .logo-text,
+.dark-mode .logo-text {
+  color: var(--text-color, #e0e0e0);
+}
+
+:root.dark-mode .logo-tagline,
+.dark-mode .logo-tagline {
+  color: var(--text-secondary, #a0a0a0);
+}
+
+/* Media Queries */
+@media (max-width: 768px) {
+  .logo-circle {
+    width: 80px;
+    height: 80px;
+  }
+
+  .logo-circle i {
+    font-size: 40px;
+  }
+
+  .logo-text {
+    font-size: 2.8rem;
+  }
+
+  .logo-tagline {
+    font-size: 1.3rem;
+  }
+}
+
+@media (max-width: 480px) {
+  .logo-circle {
+    width: 70px;
+    height: 70px;
+  }
+
+  .logo-circle i {
+    font-size: 32px;
+  }
+
+  .logo-text {
+    font-size: 2.5rem;
+  }
+
+  .logo-tagline {
+    font-size: 1.1rem;
+  }
+
+  .get-started {
+    padding: 10px 20px;
+    font-size: 1rem;
+  }
+} 

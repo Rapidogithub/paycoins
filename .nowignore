@@ -1,6 +1,0 @@
-.git
-client/
-.github/
-README.md
-*.log
-server.js 

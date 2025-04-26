@@ -1,5 +1,6 @@
 import React, { useState, useEffect } from 'react';
 import axios from 'axios';
+import { useSpring, useTrail, animated, config } from 'react-spring';
 // Remove the moment import and implement formatting directly
 // import moment from 'moment';
 import { getStoredWallet, getStoredTransactions, storeTransactions } from '../utils/localStorage';
@@ -10,6 +11,29 @@ const TransactionHistory = () => {
   const [loading, setLoading] = useState(true);
   const [error, setError] = useState('');
   const [isOffline, setIsOffline] = useState(!navigator.onLine);
+
+  // Page fade-in animation
+  const fadeIn = useSpring({
+    from: { opacity: 0 },
+    to: { opacity: 1 },
+    config: config.gentle
+  });
+
+  // Header animation
+  const headerAnimation = useSpring({
+    from: { opacity: 0, transform: 'translateY(-20px)' },
+    to: { opacity: 1, transform: 'translateY(0)' },
+    config: config.gentle,
+    delay: 100
+  });
+
+  // Staggered animation for transaction items
+  const transactionTrail = useTrail(transactions.length, {
+    from: { opacity: 0, transform: 'translateY(20px)' },
+    to: { opacity: 1, transform: 'translateY(0)' },
+    config: config.gentle,
+    delay: 200
+  });
 
   // Check online status
   useEffect(() => {
@@ -110,16 +134,27 @@ const TransactionHistory = () => {
   };
 
   if (loading) {
-    return <div>Loading transaction history...</div>;
+    return (
+      <div className="loading-container">
+        <div className="loading-spinner"></div>
+        <p>Loading transaction history...</p>
+      </div>
+    );
   }
 
   if (error) {
-    return <div className="alert alert-danger">{error}</div>;
+    return (
+      <div className="alert alert-danger">
+        <i className="fas fa-exclamation-circle"></i> {error}
+      </div>
+    );
   }
 
   return (
-    <div>
-      <h1 className="text-center my-4">Transaction History</h1>
+    <animated.div style={fadeIn}>
+      <animated.h1 style={headerAnimation} className="text-center my-4">
+        <i className="fas fa-history"></i> Transaction History
+      </animated.h1>
       
       {isOffline && (
         <div className="alert alert-warning">
@@ -128,48 +163,60 @@ const TransactionHistory = () => {
       )}
       
       {transactions.length === 0 ? (
-        <div className="alert alert-info">
-          No transactions found. Start sending or receiving coins!
+        <div className="empty-state">
+          <div className="empty-state-icon">
+            <i className="fas fa-exchange-alt"></i>
+          </div>
+          <p>No transactions found</p>
+          <p className="empty-state-text">Start sending or receiving PAY to see your transaction history</p>
         </div>
       ) : (
         <div className="transaction-list">
-          {transactions.map((transaction) => {
+          {transactionTrail.map((style, index) => {
+            const transaction = transactions[index];
             const isSender = wallet && transaction.senderWalletAddress === wallet.walletAddress;
             const otherPartyAddress = isSender
               ? transaction.receiverWalletAddress
               : transaction.senderWalletAddress;
 
             return (
-              <div
+              <animated.div
                 key={transaction.id || transaction._id}
                 className="transaction-item"
+                style={style}
               >
+                <div className="transaction-icon-container">
+                  <div className={`transaction-icon ${isSender ? 'sent' : 'received'}`}>
+                    <i className={`fas fa-${isSender ? 'arrow-up' : 'arrow-down'}`}></i>
+                  </div>
+                </div>
+                
                 <div className="transaction-details">
-                  <span
-                    className={`transaction-amount ${
-                      isSender ? 'sent' : 'received'
-                    }`}
-                  >
-                    {isSender ? '-' : '+'}{transaction.amount} PAY
-                  </span>
-                  <span className="transaction-date">
+                  <div className="transaction-description">
+                    {isSender ? 'Sent to ' : 'Received from '} 
+                    <span className="transaction-address">
+                      {otherPartyAddress.substring(0, 8)}...
+                    </span>
+                  </div>
+                  <div className="transaction-date">
                     {formatDate(transaction.date)}
-                  </span>
-                  <span className="transaction-address">
-                    {isSender ? 'To: ' : 'From: '}{otherPartyAddress}
-                  </span>
+                    {transaction.isPending && (
+                      <span className="transaction-pending">
+                        <i className="fas fa-clock"></i> Pending
+                      </span>
+                    )}
+                  </div>
                 </div>
-                <div>
-                  <span className={`badge ${transaction.isPending ? 'badge-warning' : 'badge-primary'}`}>
-                    {transaction.isPending ? 'Pending' : (isSender ? 'Sent' : 'Received')}
-                  </span>
+                
+                <div className={`transaction-amount ${isSender ? 'sent' : 'received'}`}>
+                  {isSender ? '-' : '+'}{transaction.amount} PAY
                 </div>
-              </div>
+              </animated.div>
             );
           })}
         </div>
       )}
-    </div>
+    </animated.div>
   );
 };
 

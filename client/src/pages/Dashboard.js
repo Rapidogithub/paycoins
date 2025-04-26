@@ -2,6 +2,7 @@ import React, { useState, useEffect } from 'react';
 import axios from 'axios';
 import { QRCodeSVG } from 'qrcode.react';
 import { Link, useNavigate } from 'react-router-dom';
+import { useSpring, useTrail, animated, config } from 'react-spring';
 import SendMoneyForm from '../components/wallet/SendMoneyForm';
 import QRScanner from '../components/wallet/QRScanner';
 import LimitSettingsModal from '../components/wallet/LimitSettingsModal';
@@ -37,6 +38,49 @@ const Dashboard = () => {
   });
   const [recentTransactions, setRecentTransactions] = useState([]);
   const [showQuickActions, setShowQuickActions] = useState(false);
+  const [animationsComplete, setAnimationsComplete] = useState(false);
+
+  // Animations
+  const fadeIn = useSpring({
+    from: { opacity: 0 },
+    to: { opacity: 1 },
+    config: config.gentle,
+    delay: 100,
+    onRest: () => setAnimationsComplete(true)
+  });
+
+  // Wallet card animation
+  const walletCardAnimation = useSpring({
+    from: { opacity: 0, transform: 'translateY(30px)' },
+    to: { opacity: 1, transform: 'translateY(0)' },
+    config: config.gentle,
+    delay: 200
+  });
+
+  // Stats cards animation - staggered
+  const statsItems = [1, 2, 3]; // Just placeholders for the 3 stats
+  const statsTrail = useTrail(statsItems.length, {
+    from: { opacity: 0, transform: 'translateY(30px)' },
+    to: { opacity: 1, transform: 'translateY(0)' },
+    config: config.gentle,
+    delay: 400
+  });
+
+  // Recent transactions animation - staggered
+  const transactionsTrail = useTrail(Math.min(recentTransactions.length, 5), {
+    from: { opacity: 0, transform: 'translateX(-20px)' },
+    to: { opacity: 1, transform: 'translateX(0)' },
+    config: config.gentle,
+    delay: 600
+  });
+
+  // Quick action button animation
+  const quickActionButtonAnimation = useSpring({
+    from: { transform: 'scale(0)' },
+    to: { transform: 'scale(1)' },
+    config: config.wobbly,
+    delay: 1000
+  });
 
   // Check online status
   useEffect(() => {
@@ -295,9 +339,9 @@ const Dashboard = () => {
   }
 
   return (
-    <div className="dashboard-container">
+    <animated.div style={fadeIn} className="dashboard-container">
       {/* Quick Actions Floating Menu */}
-      <div className={`quick-actions ${showQuickActions ? 'active' : ''}`}>
+      <animated.div style={quickActionButtonAnimation} className={`quick-actions ${showQuickActions ? 'active' : ''}`}>
         <button 
           className="quick-actions-toggle"
           onClick={toggleQuickActions}
@@ -370,7 +414,7 @@ const Dashboard = () => {
             </button>
           </div>
         )}
-      </div>
+      </animated.div>
       
       {error && (
         <div className="alert alert-danger">
@@ -385,7 +429,7 @@ const Dashboard = () => {
       )}
       
       {wallet && (
-        <div className="wallet-card">
+        <animated.div style={walletCardAnimation} className="wallet-card">
           <div className="wallet-header">
             <h2>Your PAY Account</h2>
             <button 
@@ -453,29 +497,37 @@ const Dashboard = () => {
 
           {/* Stats Grid */}
           <div className="stats-grid">
-            <div className="stats-card">
-              <div className="feature-icon">
-                <i className="fas fa-arrow-up"></i>
-              </div>
-              <h3>Sent</h3>
-              <p>{stats.totalSent.toFixed(2)} PAY</p>
-            </div>
-            
-            <div className="stats-card">
-              <div className="feature-icon">
-                <i className="fas fa-arrow-down"></i>
-              </div>
-              <h3>Received</h3>
-              <p>{stats.totalReceived.toFixed(2)} PAY</p>
-            </div>
-            
-            <div className="stats-card">
-              <div className="feature-icon">
-                <i className="fas fa-exchange-alt"></i>
-              </div>
-              <h3>Transactions</h3>
-              <p>{stats.transactionCount}</p>
-            </div>
+            {statsTrail.map((props, index) => (
+              <animated.div key={index} style={props} className="stats-card">
+                <div className="feature-icon">
+                  {index === 0 ? (
+                    <i className="fas fa-arrow-up"></i>
+                  ) : index === 1 ? (
+                    <i className="fas fa-arrow-down"></i>
+                  ) : (
+                    <i className="fas fa-exchange-alt"></i>
+                  )}
+                </div>
+                <h3>
+                  {index === 0 ? (
+                    `${stats.totalSent.toFixed(2)} PAY`
+                  ) : index === 1 ? (
+                    `${stats.totalReceived.toFixed(2)} PAY`
+                  ) : (
+                    `${stats.transactionCount}`
+                  )}
+                </h3>
+                <p>
+                  {index === 0 ? (
+                    'Total Sent'
+                  ) : index === 1 ? (
+                    'Total Received'
+                  ) : (
+                    'Transactions'
+                  )}
+                </p>
+              </animated.div>
+            ))}
           </div>
 
           {/* Recent Transactions */}
@@ -489,26 +541,42 @@ const Dashboard = () => {
             
             {recentTransactions.length > 0 ? (
               <div className="transaction-list">
-                {recentTransactions.map(tx => (
-                  <div key={tx.id} className="transaction-item">
-                    <div className="transaction-icon-container">
-                      <div className={`transaction-icon ${tx.senderWalletAddress === wallet.walletAddress ? 'sent' : 'received'}`}>
-                        <i className={`fas fa-${tx.senderWalletAddress === wallet.walletAddress ? 'arrow-up' : 'arrow-down'}`}></i>
+                {transactionsTrail.map((props, index) => {
+                  const transaction = recentTransactions[index];
+                  return (
+                    <animated.div
+                      key={transaction._id || index}
+                      style={props}
+                      className="transaction-item"
+                    >
+                      <div className="transaction-icon-container">
+                        <div className={`transaction-icon ${
+                          transaction.senderWalletAddress === wallet.walletAddress ? 'sent' : 'received'
+                        }`}>
+                          <i className={`fas fa-${
+                            transaction.senderWalletAddress === wallet.walletAddress ? 'arrow-up' : 'arrow-down'
+                          }`}></i>
+                        </div>
                       </div>
-                    </div>
-                    <div className="transaction-details">
-                      <div className="transaction-description">
-                        {getTransactionDescription(tx, wallet.walletAddress)}
+                      
+                      <div className="transaction-details">
+                        <div className="transaction-description">
+                          {getTransactionDescription(transaction, wallet.walletAddress)}
+                        </div>
+                        <div className="transaction-date">
+                          {moment(transaction.date).format('MMM D, YYYY • h:mm A')}
+                        </div>
                       </div>
-                      <div className="transaction-date">
-                        {moment(tx.date).format('MMM D, YYYY • h:mm A')}
+                      
+                      <div className={`transaction-amount ${
+                        transaction.senderWalletAddress === wallet.walletAddress ? 'sent' : 'received'
+                      }`}>
+                        {transaction.senderWalletAddress === wallet.walletAddress ? '-' : '+'}
+                        {transaction.amount} PAY
                       </div>
-                    </div>
-                    <div className={`transaction-amount ${tx.senderWalletAddress === wallet.walletAddress ? 'sent' : 'received'}`}>
-                      {tx.senderWalletAddress === wallet.walletAddress ? '-' : '+'}{tx.amount.toFixed(2)} PAY
-                    </div>
-                  </div>
-                ))}
+                    </animated.div>
+                  );
+                })}
               </div>
             ) : (
               <div className="empty-state">
@@ -586,9 +654,9 @@ const Dashboard = () => {
               wallet={wallet}
             />
           )}
-        </div>
+        </animated.div>
       )}
-    </div>
+    </animated.div>
   );
 };
 

@@ -1,6 +1,5 @@
-import React, { useState, useEffect } from 'react';
-import axios from 'axios';
-import { getStoredWallet, storeWallet } from '../../utils/localStorage';
+import React, { useState } from 'react';
+import { storeWallet } from '../../utils/localStorage';
 
 const LimitSettingsModal = ({ onClose, wallet }) => {
   const [limits, setLimits] = useState({

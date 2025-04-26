@@ -2,7 +2,8 @@
   "name": "pay-client",
   "version": "0.1.0",
   "private": true,
-  "homepage": "https://Rapidogithub.github.io/Paycoins",
+  "proxy": "http://localhost:5001",
+  "homepage": "https://rapidogithub.github.io/paycoins/",
   "dependencies": {
     "@testing-library/jest-dom": "^5.16.5",
     "@testing-library/react": "^13.4.0",
@@ -19,16 +20,18 @@
     "react-responsive": "^10.0.1",
     "react-router-dom": "^6.11.2",
     "react-scripts": "5.0.1",
-    "react-spring": "^9.7.5",
+    "react-spring": "^9.6.1",
     "web-vitals": "^3.3.1"
   },
   "scripts": {
     "start": "react-scripts start",
-    "build": "react-scripts build",
+    "clean": "gh-pages-clean",
+    "predeploy": "npm run build && node fix-paths.js",
+    "deploy": "gh-pages -d build",
+    "manual-deploy": "npm run build && node manual-deploy.js",
+    "build": "cross-env GENERATE_SOURCEMAP=false react-scripts build",
     "test": "react-scripts test",
-    "eject": "react-scripts eject",
-    "predeploy": "npm run build",
-    "deploy": "gh-pages -d build"
+    "eject": "react-scripts eject"
   },
   "eslintConfig": {
     "extends": [
@@ -48,5 +51,8 @@
       "last 1 safari version"
     ]
   },
-  "proxy": "http://localhost:5001"
+  "devDependencies": {
+    "cross-env": "^7.0.3",
+    "gh-pages": "^6.3.0"
+  }
 }

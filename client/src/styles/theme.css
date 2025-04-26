@@ -1,9 +1,9 @@
 /* Base Theme CSS Variables */
 :root {
   /* Default Theme (Light Mode) */
-  --theme-color: #10b981; /* Default: Green */
-  --theme-color-light: rgba(16, 185, 129, 0.1);
-  --theme-color-hover: #0ea975;
+  --theme-color: #28a745; /* Default: Green - changed to match your existing style */
+  --theme-color-light: rgba(40, 167, 69, 0.1);
+  --theme-color-hover: #218838;
   
   /* Base Colors - Light Mode */
   --background-color: #f8fafc;
@@ -18,7 +18,7 @@
   --text-muted: #94a3b8;
   
   /* States - Light Mode */
-  --success-color: #10b981;
+  --success-color: #28a745;
   --warning-color: #f59e0b;
   --error-color: #ef4444;
   --info-color: #3b82f6;
@@ -30,18 +30,26 @@
 }
 
 /* Dark Mode Theme */
-:root.dark-mode {
+.dark-mode {
+  /* Default Theme - Dark Mode */
+  --theme-color: #2fb44c; /* Matches the existing dark mode primary color */
+  --theme-color-light: rgba(47, 180, 76, 0.15);
+  --theme-color-hover: #25903d;
+  
   /* Base Colors - Dark Mode */
-  --background-color: #0f172a;
-  --surface-color: #1e293b;
-  --surface-color-light: #334155;
-  --surface-hover: #475569;
-  --border-color: #334155;
+  --background-color: #121212; /* Matching the existing dark mode */
+  --surface-color: #1e1e1e;
+  --surface-color-light: #252525;
+  --surface-hover: #303030;
+  --border-color: #404040;
   
   /* Text Colors - Dark Mode */
-  --text-color: #f8fafc;
-  --text-secondary: #cbd5e1;
-  --text-muted: #94a3b8;
+  --text-color: #e0e0e0;
+  --text-secondary: #a0a0a0;
+  --text-muted: #909090;
+  
+  /* States - Dark Mode - keeping the same for consistency */
+  --success-color: #2fb44c;
   
   /* Shadows - Dark Mode */
   --shadow-sm: 0 1px 2px 0 rgba(0, 0, 0, 0.2);
@@ -51,9 +59,9 @@
 
 /* Green Theme (Default) */
 :root.theme-green {
-  --theme-color: #10b981;
-  --theme-color-light: rgba(16, 185, 129, 0.1);
-  --theme-color-hover: #0ea975;
+  --theme-color: #28a745;
+  --theme-color-light: rgba(40, 167, 69, 0.1);
+  --theme-color-hover: #218838;
 }
 
 /* Blue Theme */
