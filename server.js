@@ -1,5 +1,6 @@
 const express = require('express');
 const path = require('path');
+const fs = require('fs');
 const app = express();
 
 // Get port from environment variable (Render sets this) or default to 10000
@@ -9,11 +10,10 @@ console.log('Starting PAY server...');
 console.log(`Using PORT: ${PORT}`);
 console.log(`NODE_ENV: ${process.env.NODE_ENV}`);
 
-// Serve static files from the public directory
-app.use(express.static(path.join(__dirname, 'public')));
-
-// Basic middleware
+// Middleware for parsing JSON
 app.use(express.json());
+
+// CORS middleware
 app.use((req, res, next) => {
   res.header('Access-Control-Allow-Origin', '*');
   res.header('Access-Control-Allow-Headers', 'Content-Type, x-auth-token');
@@ -67,9 +67,62 @@ app.get('/api/transactions', (req, res) => {
   ]);
 });
 
-// Serve static files for client-side routing
+// Serve index.html with dynamically replaced API URL
+app.get('/', (req, res) => {
+  const indexPath = path.join(__dirname, 'public', 'index.html');
+  fs.readFile(indexPath, 'utf8', (err, data) => {
+    if (err) {
+      console.error('Error reading index.html:', err);
+      return res.status(500).send('Error loading application');
+    }
+    
+    // Get the current server URL
+    const protocol = req.headers['x-forwarded-proto'] || req.protocol;
+    const host = req.headers.host;
+    const serverUrl = `${protocol}://${host}`;
+    
+    // Replace the hardcoded API_URL with the current server URL
+    const updatedHtml = data.replace(
+      "const API_URL = 'http://localhost:5002';",
+      `const API_URL = '${serverUrl}';`
+    );
+    
+    res.send(updatedHtml);
+  });
+});
+
+// Serve static files from the public directory (except index.html which we handle above)
+app.use(express.static(path.join(__dirname, 'public'), {
+  index: false // Don't serve index.html automatically
+}));
+
+// For other routes, serve the modified index.html as well for client-side routing
 app.get('*', (req, res) => {
-  res.sendFile(path.join(__dirname, 'public', 'index.html'));
+  // Skip API routes
+  if (req.path.startsWith('/api/')) {
+    return res.status(404).json({ error: 'API endpoint not found' });
+  }
+  
+  const indexPath = path.join(__dirname, 'public', 'index.html');
+  fs.readFile(indexPath, 'utf8', (err, data) => {
+    if (err) {
+      console.error('Error reading index.html:', err);
+      return res.status(500).send('Error loading application');
+    }
+    
+    // Get the current server URL
+    const protocol = req.headers['x-forwarded-proto'] || req.protocol;
+    const host = req.headers.host;
+    const serverUrl = `${protocol}://${host}`;
+    
+    // Replace the hardcoded API_URL with the current server URL
+    const updatedHtml = data.replace(
+      "const API_URL = 'http://localhost:5002';",
+      `const API_URL = '${serverUrl}';`
+    );
+    
+    res.send(updatedHtml);
+  });
 });
 
 // Start the server
