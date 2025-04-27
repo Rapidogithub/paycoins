@@ -1,114 +1,105 @@
-# PAY - Local Development Server
+# PAY Application
 
-A simple API server for local development of the PAY application.
+This is a payment application with a React frontend and Node.js/Express backend.
 
-## Features
+## Project Structure
 
-- Lightweight Express server
-- Mock API endpoints for development and testing
-- Easy to run locally
+The project is organized into two main directories:
 
-## Available Endpoints
+### Frontend
 
-- `GET /` - Status check
-- `GET /api/health` - Health check endpoint
-- `POST /api/users` - Mock user registration (returns token)
-- `GET /api/wallet` - Mock wallet information
-- `GET /api/transactions` - Mock transaction history
+The `frontend/` directory contains the React client application with the following features:
+- User authentication (login/register)
+- Dashboard for viewing wallet balance
+- Transaction history
+- QR code functionality (scan/receive)
+- Profile management
 
-## Running the Server
+### Backend
 
-### Prerequisites
+The `backend/` directory contains the Node.js/Express server with the following features:
+- API endpoints for user authentication
+- Mock wallet and transaction data
+- Server configuration for local development and deployment
 
-- Node.js installed
+## Getting Started
 
-### Quick Start
+### Quick Start (Using Root Scripts)
 
-1. Install dependencies:
+1. Install all dependencies at once:
+   ```
+   npm run install:all
+   ```
+
+2. Run both frontend and backend concurrently:
+   ```
+   npm run dev
+   ```
+
+### Running Individual Components
+
+#### Backend
+
+1. Navigate to the backend directory:
+   ```
+   cd backend
+   ```
+
+2. Install dependencies:
    ```
    npm install
    ```
 
-2. Start the server locally:
+3. Start the server:
    ```
    npm run dev
    ```
    
-   Or run the batch file:
+   Or use the batch file:
    ```
    run-local.bat
    ```
 
-### Server Information
+#### Frontend
 
-- The local server will automatically try ports in this sequence: 5002, 5003, 5004, 5005, 3000, 8080
-- It will use the first available port
-- The console will show the URL where the server is running
-- All API endpoints return mock data
-- CORS is enabled for all origins
+1. Navigate to the frontend directory:
+   ```
+   cd frontend
+   ```
 
-## Deployment to Render
+2. Install dependencies:
+   ```
+   npm install
+   ```
 
-### Setup Process
+3. Start the development server:
+   ```
+   npm start
+   ```
 
-1. Push your code to a GitHub repository
+## Deployment
 
-2. Create a new Web Service in Render:
-   - Connect your GitHub repository
-   - Select the branch to deploy
-   - Set the build command: `npm install`
-   - Set the start command: `npm start`
+The application is configured for deployment to Render. The frontend is set to use the API URL `https://pay-coins.onrender.com`.
 
-3. Configure Environment Variables:
-   - In Render dashboard, go to the "Environment" tab
-   - Add the following key environment variables:
-     - `NODE_ENV`: `production`
-     - `JWT_SECRET`: a strong secret token for JWT authentication
-     - `REACT_APP_API_URL`: the URL of your deployed API (if deploying frontend separately)
+### Addressing Cold Start Issues
 
-4. Deploy your application
-   - Click "Manual Deploy" and select "Deploy latest commit"
-   - Render will build and deploy your application
+Since we're using Render's free tier, the backend server goes to sleep after 15 minutes of inactivity. This causes a "cold start" delay of 30-60 seconds when accessing the app after a period of inactivity.
 
-### Environment Variables
+This project includes several optimizations to handle cold starts:
 
-The application uses these environment variables:
+1. **Warmup Page**: Access `/warmup.html` to pre-warm the server
+2. **Connection Management**: The app includes smart connection retry logic with exponential backoff
+3. **Cold Start Detection**: Special UI shows when server is starting up after hibernation
+4. **Warmup API Endpoint**: The backend includes a `/warmup` endpoint to speed up initialization
 
-1. **NODE_ENV** - Set to `production` for production deployment
-2. **JWT_SECRET** - Secret key for JWT token generation/verification
-3. **REACT_APP_API_URL** - Base URL for API requests (for frontend)
+### How to Use the Warmup Feature
 
-## Development Notes
+If you find the app is taking too long to load, use these approaches:
 
-This is a streamlined version of the PAY server, designed for local development only. 
-It provides mock endpoints that return consistent data for frontend testing.
+1. Visit `https://pay-coins.onrender.com/warmup` directly in your browser before using the app
+2. When using the GitHub Pages frontend, use the `/warmup` route to activate server warming
+3. For direct server access, the backend has a dedicated warmup endpoint at `/warmup`
 
-## API Response Examples
+The warmup page includes a countdown timer and will automatically redirect to the main app once the server is ready.
 
-### GET /api/wallet
-```json
-{
-  "balance": 1250.75,
-  "currency": "USD",
-  "walletId": "wallet_demo",
-  "lastUpdated": "2023-09-01T12:00:00.000Z"
-}
-```
-
-### GET /api/transactions
-```json
-[
-  {
-    "id": "txn_demo1",
-    "amount": 125.50,
-    "type": "deposit",
-    "date": "2023-08-31T12:00:00.000Z"
-  },
-  {
-    "id": "txn_demo2",
-    "amount": 42.75,
-    "type": "payment",
-    "date": "2023-08-30T12:00:00.000Z"
-  }
-]
-``` 
+See the documentation in each directory for specific deployment instructions. 
