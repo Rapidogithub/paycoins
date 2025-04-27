@@ -10,7 +10,7 @@ let baseURL = '';
 // More detailed configuration based on environment
 if (!isDevelopment && isGitHubPages) {
   // We're on GitHub Pages in production
-  baseURL = process.env.REACT_APP_API_URL || 'https://pay-coins.onrender.com';
+  baseURL = process.env.REACT_APP_API_URL || 'https://pay-backend-iu9e.onrender.com';
   console.log('Running on GitHub Pages - setting base URL to:', baseURL);
 } else if (isDevelopment) {
   // In development, use the proxy defined in package.json

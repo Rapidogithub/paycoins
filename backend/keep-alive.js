@@ -1,7 +1,7 @@
 const fetch = require('node-fetch');
 
-// Replace with your actual Render URL
-const RENDER_URL = process.env.RENDER_URL || 'https://your-app-name.onrender.com';
+// Get URL from environment variable set in render.yaml
+const RENDER_URL = process.env.RENDER_URL || 'https://pay-backend-iu9e.onrender.com';
 
 // Ping the health endpoint every 5 minutes
 const PING_INTERVAL = 5 * 60 * 1000; // 5 minutes in milliseconds

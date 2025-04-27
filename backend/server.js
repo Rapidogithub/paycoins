@@ -193,7 +193,7 @@ app.get('/', (req, res) => {
     // Replace the hardcoded API_URL with the determined API URL
     const updatedHtml = data.replace(
       "const API_URL = 'http://localhost:5002';",
-      `const API_URL = 'https://pay-coins.onrender.com';`
+      `const API_URL = 'https://pay-backend-iu9e.onrender.com';`
     );
     
     res.send(updatedHtml);
@@ -232,7 +232,7 @@ app.get('*', (req, res) => {
     // Replace the hardcoded API_URL with the determined API URL
     const updatedHtml = data.replace(
       "const API_URL = 'http://localhost:5002';",
-      `const API_URL = 'https://pay-coins.onrender.com';`
+      `const API_URL = 'https://pay-backend-iu9e.onrender.com';`
     );
     
     res.send(updatedHtml);

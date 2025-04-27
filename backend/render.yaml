@@ -1,6 +1,6 @@
 services:
   - type: web
-    name: pay-app
+    name: pay-backend-iu9e
     env: node
     plan: free
     buildCommand: npm install
@@ -13,10 +13,10 @@ services:
       - key: REACT_APP_API_URL
         sync: false # Set this in the Render dashboard to your deployed app URL
       - key: BACKEND_URL
-        sync: false # Optional: Set this to your API URL if frontend is hosted elsewhere
+        value: https://pay-backend-iu9e.onrender.com # Set explicitly for consistency
       - key: RENDER_URL
         fromService:
-          name: pay-app
+          name: pay-backend-iu9e
           type: web
           property: url # This will automatically set to the URL of the web service
   
@@ -29,7 +29,4 @@ services:
     startCommand: npm run keep-alive
     envVars:
       - key: RENDER_URL
-        fromService:
-          name: pay-app
-          type: web
-          property: url 
+        value: https://pay-backend-iu9e.onrender.com # Set explicitly to match backend URL 

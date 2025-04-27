@@ -1,0 +1,215 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>PAY Server Warm-up</title>
+    <style>
+        body {
+            font-family: Arial, sans-serif;
+            max-width: 800px;
+            margin: 40px auto;
+            padding: 20px;
+            background-color: #f7f9fc;
+            color: #333;
+            line-height: 1.6;
+        }
+        .container {
+            background-color: white;
+            border-radius: 8px;
+            box-shadow: 0 2px 10px rgba(0,0,0,0.1);
+            padding: 30px;
+        }
+        h1 {
+            color: #2563eb;
+            margin-top: 0;
+        }
+        .status {
+            margin: 20px 0;
+            padding: 15px;
+            border-radius: 5px;
+            background-color: #e6f7ff;
+            border-left: 4px solid #2563eb;
+        }
+        .success {
+            background-color: #e6ffed;
+            border-left-color: #52c41a;
+        }
+        .error {
+            background-color: #fff2f0;
+            border-left-color: #ff4d4f;
+        }
+        .actions {
+            margin-top: 30px;
+        }
+        button {
+            background-color: #2563eb;
+            color: white;
+            border: none;
+            padding: 10px 20px;
+            border-radius: 4px;
+            cursor: pointer;
+            font-size: 16px;
+        }
+        button:hover {
+            background-color: #1d4ed8;
+        }
+        .timer {
+            font-size: 20px;
+            font-weight: bold;
+            margin: 20px 0;
+        }
+        .log {
+            background-color: #f1f5f9;
+            border-radius: 4px;
+            padding: 15px;
+            margin-top: 20px;
+            font-family: monospace;
+            max-height: 200px;
+            overflow-y: auto;
+        }
+        .log p {
+            margin: 5px 0;
+        }
+        .log p.info {
+            color: #0369a1;
+        }
+        .log p.success {
+            color: #16a34a;
+        }
+        .log p.error {
+            color: #dc2626;
+        }
+    </style>
+</head>
+<body>
+    <div class="container">
+        <h1>PAY Server Warm-up</h1>
+        
+        <p>This page helps warm up the Render server to reduce cold start delays.</p>
+        
+        <div id="status" class="status">
+            Initiating warm-up sequence...
+        </div>
+        
+        <div id="timer" class="timer">
+            60
+        </div>
+        
+        <div class="actions">
+            <button id="warmupBtn">Warm Up Server Now</button>
+            <button id="continueBtn" style="margin-left: 10px; background-color: #64748b;">Continue to App</button>
+        </div>
+        
+        <div id="log" class="log">
+            <p class="info">Warm-up log:</p>
+        </div>
+    </div>
+
+    <script>
+        // API URL - same as the main app
+        const API_URL = 'https://pay-coins.onrender.com';
+        let countdown = 60;
+        let timer;
+        let warmupStarted = false;
+        const statusEl = document.getElementById('status');
+        const timerEl = document.getElementById('timer');
+        const logEl = document.getElementById('log');
+
+        // Auto-initiate warmup
+        window.addEventListener('load', () => {
+            // Start countdown
+            startCountdown();
+            
+            // Start warmup immediately
+            warmupServer();
+        });
+        
+        // Function to add log message
+        function addLog(message, type = 'info') {
+            const logEntry = document.createElement('p');
+            logEntry.className = type;
+            logEntry.textContent = message;
+            logEl.appendChild(logEntry);
+            logEl.scrollTop = logEl.scrollHeight;
+        }
+        
+        // Start countdown timer
+        function startCountdown() {
+            timer = setInterval(() => {
+                countdown--;
+                timerEl.textContent = countdown;
+                
+                if (countdown <= 0) {
+                    clearInterval(timer);
+                    // Auto-redirect after countdown
+                    addLog('Countdown complete, redirecting to app...', 'success');
+                    setTimeout(() => {
+                        window.location.href = '/';
+                    }, 1000);
+                }
+            }, 1000);
+        }
+
+        // Function to warm up the server
+        async function warmupServer() {
+            if (warmupStarted) return;
+            warmupStarted = true;
+            
+            try {
+                addLog('Sending warm-up request to server...');
+                statusEl.textContent = 'Warming up server...';
+                
+                // First, try the dedicated warm-up endpoint
+                const warmupResponse = await fetch(`${API_URL}/warmup`, {
+                    method: 'GET',
+                    headers: {
+                        'Accept': 'application/json'
+                    }
+                });
+                
+                if (warmupResponse.ok) {
+                    const data = await warmupResponse.json();
+                    addLog(`Warm-up initiated! Server uptime: ${data.uptime}`, 'success');
+                    
+                    // Now check the health endpoint
+                    addLog('Checking server health...');
+                    const healthResponse = await fetch(`${API_URL}/api/health`);
+                    
+                    if (healthResponse.ok) {
+                        statusEl.textContent = 'Server is now ready!';
+                        statusEl.className = 'status success';
+                        addLog('Server is healthy and ready to use!', 'success');
+                        
+                        // Speed up countdown
+                        clearInterval(timer);
+                        countdown = 3;
+                        startCountdown();
+                    } else {
+                        throw new Error('Health check failed');
+                    }
+                } else {
+                    throw new Error('Warm-up failed');
+                }
+            } catch (error) {
+                addLog(`Error: ${error.message}`, 'error');
+                statusEl.textContent = 'Warm-up encountered an issue. Server may still be starting.';
+                statusEl.className = 'status error';
+                
+                // Try again after a delay
+                setTimeout(() => {
+                    warmupStarted = false;
+                    addLog('Retrying warm-up...', 'info');
+                    warmupServer();
+                }, 5000);
+            }
+        }
+
+        // Button event listeners
+        document.getElementById('warmupBtn').addEventListener('click', warmupServer);
+        document.getElementById('continueBtn').addEventListener('click', () => {
+            window.location.href = '/';
+        });
+    </script>
+</body>
+</html> 
