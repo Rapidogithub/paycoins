@@ -2,7 +2,7 @@
   "name": "pay-client",
   "version": "0.1.0",
   "private": true,
-  "proxy": "https://pay-coins.onrender.com",
+  "proxy": "https://pay-backend-iu9e.onrender.com",
   "homepage": "https://rapidogithub.github.io/paycoins/",
   "dependencies": {
     "@testing-library/jest-dom": "^5.16.5",
@@ -31,6 +31,7 @@
     "deploy": "gh-pages -d build",
     "manual-deploy": "npm run build && node manual-deploy.js",
     "build": "cross-env GENERATE_SOURCEMAP=false react-scripts build || GENERATE_SOURCEMAP=false react-scripts build",
+    "build:render": "node render-build.js",
     "test": "react-scripts test",
     "eject": "react-scripts eject"
   },
