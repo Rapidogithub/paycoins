@@ -3,24 +3,25 @@ import axios from 'axios';
 // Determine the base URL based on the environment
 const isDevelopment = process.env.NODE_ENV === 'development';
 const isGitHubPages = window.location.hostname.includes('github.io');
+const isRender = window.location.hostname.includes('onrender.com');
 
-// For GitHub Pages deployment, we need to set the correct base URL
+// For production deployments, we need to set the correct base URL
 let baseURL = '';
 
 // More detailed configuration based on environment
-if (!isDevelopment && isGitHubPages) {
-  // We're on GitHub Pages in production
+if (!isDevelopment && (isGitHubPages || isRender)) {
+  // We're on GitHub Pages or Render static site in production
   baseURL = process.env.REACT_APP_API_URL || 'https://pay-backend-iu9e.onrender.com';
-  console.log('Running on GitHub Pages - setting base URL to:', baseURL);
+  console.log(`Running on ${isGitHubPages ? 'GitHub Pages' : 'Render'} - setting base URL to:`, baseURL);
 } else if (isDevelopment) {
   // In development, use the proxy defined in package.json
   console.log('Running in development mode - using proxy for API calls');
 } else {
-  // Other production environment (not GitHub Pages)
-  console.log('Running in production (not GitHub Pages) - using relative paths');
+  // Other production environment
+  console.log('Running in production (not GitHub Pages or Render) - using relative paths');
 }
 
-// Configure axios defaults with better timeout for Railway
+// Configure axios defaults with better timeout for Render cold starts
 const api = axios.create({
   baseURL: baseURL,
   timeout: 20000 // Increased timeout to 20 seconds for Render cold starts
@@ -100,11 +101,11 @@ setTimeout(() => {
   checkWithRetry();
 }, 1000);
 
-// Add request interceptor to handle API paths for GitHub Pages
+// Add request interceptor to handle API paths for GitHub Pages and Render
 api.interceptors.request.use(
   async config => {
-    // Ensure all API requests have the correct base URL when on GitHub Pages
-    if (isGitHubPages && config.url.startsWith('/api/')) {
+    // Ensure all API requests have the correct base URL when on GitHub Pages or Render
+    if ((isGitHubPages || isRender) && config.url.startsWith('/api/')) {
       config.url = `${baseURL}${config.url}`;
     }
     
